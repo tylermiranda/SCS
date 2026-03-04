@@ -1,7 +1,7 @@
 name = "sedgwick-county-tax-scraper"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-03-04"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat", "nodejs_zlib"]
 
 [[kv_namespaces]]
 binding = "SCS_DATA"

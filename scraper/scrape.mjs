@@ -1,7 +1,8 @@
 import * as cheerio from 'cheerio';
+import { Buffer } from 'node:buffer';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import pdfParse from 'pdf-parse';
+import zlib from 'node:zlib';
 
 const BASE_URL = 'https://ssc.sedgwickcounty.org/propertytax';
 
@@ -262,17 +263,26 @@ export async function scrapeComparableSales(pin) {
     
     if (pdfRes.status !== 200) {
       console.warn(`Warning: PDF fetch returned status ${pdfRes.status} for URL: ${pdfUrl}`);
-      const buffer = await pdfRes.arrayBuffer();
-      const textPreview = Buffer.from(buffer).toString('utf8').substring(0, 200);
-      console.warn(`Response preview: ${textPreview}`);
       return null;
     }
 
     const buffer = await pdfRes.arrayBuffer();
-    
-    const parse = pdfParse.default || pdfParse;
-    const pdfData = await parse(Buffer.from(buffer));
-    const text = pdfData.text;
+    const str = Buffer.from(buffer).toString('binary');
+    const streamRegex = /stream[\r\n]+([\s\S]*?)[\r\n]+endstream/gm;
+    let match;
+    let text = "";
+
+    while ((match = streamRegex.exec(str)) !== null) {
+      try {
+        const inflated = zlib.inflateSync(Buffer.from(match[1], "binary")).toString("binary");
+        const textMatches = inflated.match(/\((?:[^)(]|\\[)(])*\)/g);
+        if (textMatches) {
+          text += textMatches.map(m => m.slice(1, -1).replace(/\\(\(|\))/g, "$1")).join(" ") + "\n";
+        }
+      } catch(e) {
+        text += `[zlib error: ${e.message}] `;
+      }
+    }
 
     const compSales = {
       comps: [],
@@ -280,25 +290,22 @@ export async function scrapeComparableSales(pin) {
       compSalesValue: null
     };
 
-    const quickRefMatch = text.match(/((?:R\d+)+)Quick Ref#/);
-    const yearBuiltMatch = text.match(/((?:\d{4})+)Year Built/);
-    const mktAdjMatch = text.match(/((?:\d{1,3}(?:,\d{3})*)+)MKT Adj Sale Price/);
-    const compSalesValueMatch = text.match(/([\d,]+)Comp Sales Value/);
-    const addressMatch = text.match(/Property ID\n([\s\S]*?)Address\n/);
+    const quickRefMatch = text.match(/((?:R\d+\s*)+)Quick Ref#/);
+    const yearBuiltMatch = text.match(/((?:\d{4}\s*)+)Year Built/);
+    const mktAdjMatch = text.match(/((?:\d{1,3}(?:,\d{3})*\s*)+)MKT Adj Sale Price/);
+    const compSalesValueMatch = text.match(/([\d,]+)\s*Comp Sales Value/);
+    const addressMatch = text.match(/Property ID\s+([\s\S]*?)Address/);
 
     let addresses = [];
     if (addressMatch) {
-      const lines = addressMatch[1].trim().split('\n');
-      let currentAddress = '';
-      for (let line of lines) {
-        if (/^\d+$/.test(line.trim())) {
-          if (currentAddress) addresses.push(currentAddress.trim());
-          currentAddress = line.trim();
-        } else {
-          currentAddress += ' ' + line.trim();
-        }
-      }
-      if (currentAddress) addresses.push(currentAddress.trim());
+      // The addresses usually come in a contiguous block, but they might span multiple lines if long.
+      // Often, the last address is the Subject property, and the rest are Comps.
+      // In this format, we split by spaces/newlines and re-join them roughly.
+      const lines = addressMatch[1].trim().split('\n').join(' ').split(/\s{2,}/);
+      // More robustly: the address block contains the addresses concatenated with spaces.
+      // We will rely on the fact that each address has a number to split them.
+      const rawAddrs = addressMatch[1].replace(/\n/g, ' ').trim();
+      addresses = rawAddrs.split(/(?=\d{2,}\s+[A-Z])/).map(a => a.trim()).filter(a => a.length > 0);
     }
     
     if (compSalesValueMatch) {
