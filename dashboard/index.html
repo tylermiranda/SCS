@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-      <header class="site-header">
+    <header class="site-header">
       <div class="header-content">
         <div class="header-left">
           <div class="header-title-wrapper" style="display: flex; align-items: center; margin-bottom: 0.25rem;">
@@ -27,6 +27,51 @@
             <h1 style="margin-bottom: 0;">Sedgwick County <span class="accent">Squeeze</span></h1>
           </div>
           <p class="subtitle" style="margin-top: 0;">Search properties, track appraisal histories, and understand your taxes.</p>
+        </div>
+        
+        <div class="header-stats-container" id="summaryCards">
+          <div class="header-stat glass" title="Based only on properties currently searched on this site.">
+            <span class="stat-icon">🏠</span>
+            <div class="stat-content">
+              <span class="stat-val" id="avgAppraisal">—</span>
+              <span class="stat-lbl">Avg Appraisal (2026)</span>
+            </div>
+          </div>
+          <div class="header-stat glass">
+            <span class="stat-icon">📈</span>
+            <div class="stat-content">
+              <span class="stat-val" id="medianChange">—</span>
+              <span class="stat-lbl">Median YoY Change</span>
+            </div>
+          </div>
+          <div class="header-stat glass">
+            <span class="stat-icon">🔝</span>
+            <div class="stat-content">
+              <span class="stat-val" id="highestAppraisal">—</span>
+              <span class="stat-lbl">Highest Appraisal</span>
+            </div>
+          </div>
+          <div class="header-stat glass">
+            <span class="stat-icon">📉</span>
+            <div class="stat-content">
+              <span class="stat-val" id="lowestAppraisal">—</span>
+              <span class="stat-lbl">Lowest Appraisal</span>
+            </div>
+          </div>
+          <div class="header-stat glass" style="flex: 1.5;">
+            <span class="stat-icon">🚀</span>
+            <div class="stat-content">
+              <span class="stat-val" id="biggestJumpYear">—</span>
+              <span class="stat-lbl" id="biggestJumpLabel">Biggest YoY Jump</span>
+            </div>
+          </div>
+          <div class="header-stat glass">
+            <span class="stat-icon">🧱</span>
+            <div class="stat-content">
+              <span class="stat-val" id="avgImprovementRatio">—</span>
+              <span class="stat-lbl">Avg Impr. / Land Split</span>
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -227,44 +272,6 @@
             <li><strong>Bring an Independent Appraisal:</strong> If you recently refinanced or bought the home, a fee appraisal from a licensed appraiser within the last 12 months is often the strongest evidence you can provide.</li>
             <li><strong>The Process:</strong> The informal hearing is a conversation, not a court case. Be polite, stick to the facts and data, and avoid arguing about the taxes themselves—the hearing is strictly about the market value of the property.</li>
           </ul>
-        </div>
-      </section>
-
-      <!-- Summary Cards -->
-      <div class="aggregate-header" style="margin-bottom: 0.5rem;">
-        <h2>Aggregate Statistics</h2>
-        <p class="chart-subtitle" style="margin-bottom: 0;">These statistics reflect only the properties we currently have data for. The dataset grows automatically as people search for new addresses, but it does not represent every property in Sedgwick County.</p>
-      </div>
-      <section class="summary-cards" id="summaryCards">
-        <div class="card glass" id="cardAvgAppraisal">
-          <div class="card-icon">🏠</div>
-          <div class="card-value" id="avgAppraisal">—</div>
-          <div class="card-label">Avg Appraisal (2026)</div>
-        </div>
-        <div class="card glass" id="cardMedianChange">
-          <div class="card-icon">📈</div>
-          <div class="card-value" id="medianChange">—</div>
-          <div class="card-label">Median YoY Change</div>
-        </div>
-        <div class="card glass" id="cardHighest">
-          <div class="card-icon">🔝</div>
-          <div class="card-value" id="highestAppraisal">—</div>
-          <div class="card-label">Highest Appraisal</div>
-        </div>
-        <div class="card glass" id="cardLowest">
-          <div class="card-icon">📉</div>
-          <div class="card-value" id="lowestAppraisal">—</div>
-          <div class="card-label">Lowest Appraisal</div>
-        </div>
-        <div class="card glass" id="cardBiggestJump">
-          <div class="card-icon">🚀</div>
-          <div class="card-value" id="biggestJumpYear">—</div>
-          <div class="card-label" id="biggestJumpLabel">Biggest YoY Jump</div>
-        </div>
-        <div class="card glass" id="cardAvgImprovement">
-          <div class="card-icon">🧱</div>
-          <div class="card-value" id="avgImprovementRatio">—</div>
-          <div class="card-label">Avg Impr. / Land Split</div>
         </div>
       </section>
 
