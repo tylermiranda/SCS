@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Squeeze Admin | System Logs</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+    <style>
+      .log-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+      .log-table th { background: var(--bg-elevated); padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-size: var(--text-xs); border-bottom: 1px solid var(--glass-border); }
+      .log-table td { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: top; }
+      .log-table tr:hover { background: var(--glass-hover); }
+      .log-time { color: var(--text-muted); white-space: nowrap; font-family: monospace; }
+      .log-query { color: var(--accent-teal); font-weight: 500; }
+      .log-error { color: var(--accent-rose); font-family: monospace; font-size: 0.85em; white-space: pre-wrap; word-break: break-word; }
+    </style>
+  </head>
+  <body>
+    <div id="protectedContent">
+      <header class="site-header">
+        <div class="header-content">
+          <div class="header-left">
+            <div class="header-title-wrapper" style="display: flex; align-items: center; margin-bottom: 0.25rem;">
+              <img src="/logo-icon.png" alt="Squeeze Logo" class="site-logo" />
+              <h1 style="margin-bottom: 0;">Admin <span class="accent">Dashboard</span></h1>
+            </div>
+            <p class="subtitle" style="margin-top: 0;">Squeeze Data Management</p>
+          </div>
+          <div class="header-right">
+            <nav class="nav-links" style="display: flex; gap: 1.5rem; align-items: center;">
+              <a href="/" class="nav-link" style="opacity: 0.6; margin-right: 1rem;">&larr; Public Site</a>
+              <a href="/admin/" class="nav-link">Overview</a>
+              <a href="/admin/properties.html" class="nav-link">Properties</a>
+              <a href="/admin/database.html" class="nav-link">Database</a>
+              <a href="/admin/logs.html" class="nav-link" style="color: var(--accent-teal); font-weight: bold;">Logs</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="table-section" style="margin-top: 1rem;">
+          <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>System Logs</h2>
+            <button id="clearLogsBtn" class="btn btn-secondary" style="color: var(--accent-rose); border-color: var(--accent-rose);">Clear Logs</button>
+          </div>
+          
+          <div class="table-responsive glass">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th style="width: 200px;">Timestamp</th>
+                  <th style="width: 250px;">Action / Query</th>
+                  <th>Error Message</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody">
+                <tr><td colspan="3" style="text-align: center; padding: 2rem;">Loading logs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      async function loadLogs() {
+        try {
+          const res = await fetch('/api/admin/logs?t=' + Date.now());
+          if (!res.ok) throw new Error('Failed to load logs');
+          const data = await res.json();
+          
+          const tbody = document.getElementById('logsTableBody');
+          
+          if (!data.logs || data.logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">No logs found.</td></tr>';
+            return;
+          }
+
+          // Sort descending by timestamp
+          const sortedLogs = data.logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+          tbody.innerHTML = sortedLogs.map(log => `
+            <tr>
+              <td class="log-time">${new Date(log.timestamp).toLocaleString()}</td>
+              <td class="log-query">${log.action}<br><span style="font-size: 0.8em; color: var(--text-muted);">${log.query || ''}</span></td>
+              <td class="log-error">${log.error || 'Unknown Error'}</td>
+            </tr>
+          `).join('');
+        } catch (err) {
+          console.error(err);
+          document.getElementById('logsTableBody').innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 2rem; color: var(--accent-rose);">Error loading logs. Make sure you are authenticated.</td></tr>`;
+        }
+      }
+
+      document.getElementById('clearLogsBtn').addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to clear all logs?')) return;
+        
+        try {
+          const res = await fetch('/api/admin/logs', { method: 'DELETE' });
+          if (res.ok) {
+            loadLogs();
+          } else {
+            alert('Failed to clear logs.');
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      });
+
+      loadLogs();
+    </script>
+  </body>
+</html>

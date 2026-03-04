@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Squeeze Admin | Overview</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="protectedContent">
+      <header class="site-header">
+        <div class="header-content">
+          <div class="header-left">
+            <div class="header-title-wrapper" style="display: flex; align-items: center; margin-bottom: 0.25rem;">
+              <img src="/logo-icon.png" alt="Squeeze Logo" class="site-logo" />
+              <h1 style="margin-bottom: 0;">Admin <span class="accent">Dashboard</span></h1>
+            </div>
+            <p class="subtitle" style="margin-top: 0;">Squeeze Data Management</p>
+          </div>
+          <div class="header-right">
+            <nav class="nav-links" style="display: flex; gap: 1.5rem; align-items: center;">
+              <a href="/" class="nav-link" style="opacity: 0.6; margin-right: 1rem;">&larr; Public Site</a>
+              <a href="/admin/" class="nav-link" style="color: var(--accent-teal); font-weight: bold;">Overview</a>
+              <a href="/admin/properties.html" class="nav-link">Properties</a>
+              <a href="/admin/database.html" class="nav-link">Database</a>
+              <a href="/admin/logs.html" class="nav-link">Logs</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main style="max-width: 800px; margin: 0 auto;">
+        <section class="glass" style="padding: 3rem; text-align: center; margin-top: 2rem;">
+          <h2 style="font-size: var(--text-2xl); margin-bottom: 1rem;">Welcome to the Admin Panel</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem;">Manage the underlying data and monitor system health for the Sedgwick County Squeeze application.</p>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+            <a href="/admin/properties.html" class="glass" style="padding: 2rem; text-decoration: none; color: inherit; display: block; transition: all 0.2s;">
+              <div style="font-size: 2rem; margin-bottom: 1rem;">🏠</div>
+              <h3 style="margin-bottom: 0.5rem;">All Properties</h3>
+              <p style="font-size: var(--text-sm); color: var(--text-secondary);">View and filter the complete, unredacted property dataset.</p>
+            </a>
+            
+            <a href="/admin/database.html" class="glass" style="padding: 2rem; text-decoration: none; color: inherit; display: block; transition: all 0.2s;">
+              <div style="font-size: 2rem; margin-bottom: 1rem;">💾</div>
+              <h3 style="margin-bottom: 0.5rem;">Raw Database</h3>
+              <p style="font-size: var(--text-sm); color: var(--text-secondary);">Directly edit the JSON data stored in Cloudflare KV.</p>
+            </a>
+            
+            <a href="/admin/logs.html" class="glass" style="padding: 2rem; text-decoration: none; color: inherit; display: block; transition: all 0.2s;">
+              <div style="font-size: 2rem; margin-bottom: 1rem;">📋</div>
+              <h3 style="margin-bottom: 0.5rem;">System Logs</h3>
+              <p style="font-size: var(--text-sm); color: var(--text-secondary);">Monitor failed property scrape attempts and errors.</p>
+            </a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

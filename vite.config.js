@@ -9,7 +9,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'dashboard/index.html'),
-        properties: resolve(__dirname, 'dashboard/properties.html'),
+        adminIndex: resolve(__dirname, 'dashboard/admin/index.html'),
+        adminProperties: resolve(__dirname, 'dashboard/admin/properties.html'),
+        adminLogs: resolve(__dirname, 'dashboard/admin/logs.html'),
+        adminDatabase: resolve(__dirname, 'dashboard/admin/database.html'),
       }
     }
   },

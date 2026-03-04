@@ -88,9 +88,22 @@ export async function onRequest(context) {
 
 `));
     } catch (error) {
-      await writer.write(encoder.encode(`data: ${JSON.stringify({ error: error.message })}
+      try {
+        let logsStr = await env.SCS_DATA.get('logs.json');
+        let logs = logsStr ? JSON.parse(logsStr) : [];
+        logs.push({
+          timestamp: new Date().toISOString(),
+          action: 'Stream API Failed',
+          query: `PIN: ${pin}, Address: ${address}`,
+          error: error.message || String(error)
+        });
+        if (logs.length > 500) logs = logs.slice(-500);
+        await env.SCS_DATA.put('logs.json', JSON.stringify(logs));
+      } catch (logErr) {
+        console.error('Failed to write log to KV', logErr);
+      }
 
-`));
+      await writer.write(encoder.encode(`data: ${JSON.stringify({ error: error.message })}\n\n`));
     } finally {
       await writer.close();
     }

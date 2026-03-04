@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Squeeze Admin | Database Editor</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+    <style>
+      .editor-container { width: 100%; height: calc(100vh - 280px); display: flex; flex-direction: column; }
+      #jsonEditor { flex: 1; width: 100%; background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 1rem; font-family: monospace; font-size: 13px; line-height: 1.5; resize: none; outline: none; transition: border-color 0.2s; white-space: pre; overflow: auto; }
+      #jsonEditor:focus { border-color: var(--accent-teal); }
+      .toast { position: fixed; bottom: 2rem; right: 2rem; padding: 1rem 1.5rem; border-radius: 8px; font-weight: 500; color: white; opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 9999; }
+      .toast.success { background: var(--accent-green); }
+      .toast.error { background: var(--accent-rose); }
+      .toast.show { opacity: 1; transform: translateY(0); }
+    </style>
+  </head>
+  <body>
+    <div id="protectedContent">
+      <header class="site-header">
+        <div class="header-content">
+          <div class="header-left">
+            <div class="header-title-wrapper" style="display: flex; align-items: center; margin-bottom: 0.25rem;">
+              <img src="/logo-icon.png" alt="Squeeze Logo" class="site-logo" />
+              <h1 style="margin-bottom: 0;">Admin <span class="accent">Dashboard</span></h1>
+            </div>
+            <p class="subtitle" style="margin-top: 0;">Squeeze Data Management</p>
+          </div>
+          <div class="header-right">
+            <nav class="nav-links" style="display: flex; gap: 1.5rem; align-items: center;">
+              <a href="/" class="nav-link" style="opacity: 0.6; margin-right: 1rem;">&larr; Public Site</a>
+              <a href="/admin/" class="nav-link">Overview</a>
+              <a href="/admin/properties.html" class="nav-link">Properties</a>
+              <a href="/admin/database.html" class="nav-link" style="color: var(--accent-teal); font-weight: bold;">Database</a>
+              <a href="/admin/logs.html" class="nav-link">Logs</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="editor-section" style="margin-top: 1rem;">
+          <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <h2>Raw Database Editor</h2>
+              <p class="subtitle" style="margin-top: 0;">Edit the properties array stored in Cloudflare KV.</p>
+            </div>
+            <button id="saveBtn" class="btn">Save Changes</button>
+          </div>
+          
+          <div class="editor-container">
+            <textarea id="jsonEditor" spellcheck="false">Loading data...</textarea>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const editor = document.getElementById('jsonEditor');
+      const saveBtn = document.getElementById('saveBtn');
+      const toast = document.getElementById('toast');
+
+      function showToast(msg, type = 'success') {
+        toast.textContent = msg;
+        toast.className = `toast ${type} show`;
+        setTimeout(() => toast.classList.remove('show'), 3000);
+      }
+
+      async function loadData() {
+        try {
+          saveBtn.disabled = true;
+          const res = await fetch('/api/admin/data?t=' + Date.now());
+          if (!res.ok) throw new Error('Failed to load data');
+          const data = await res.json();
+          editor.value = JSON.stringify(data, null, 2);
+        } catch (err) {
+          console.error(err);
+          editor.value = 'Error loading data. Make sure you are authenticated.';
+        } finally {
+          saveBtn.disabled = false;
+        }
+      }
+
+      saveBtn.addEventListener('click', async () => {
+        try {
+          const content = editor.value;
+          const parsed = JSON.parse(content);
+          
+          if (!parsed.properties || !Array.isArray(parsed.properties)) {
+            throw new Error('Invalid JSON: Must contain a "properties" array.');
+          }
+
+          saveBtn.disabled = true;
+          saveBtn.textContent = 'Saving...';
+
+          const res = await fetch('/api/admin/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(parsed)
+          });
+
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || 'Failed to save');
+          }
+
+          showToast('Database saved successfully!');
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save Changes';
+        }
+      });
+
+      // Handle tab key in textarea
+      editor.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const start = this.selectionStart;
+          const end = this.selectionEnd;
+          this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+          this.selectionStart = this.selectionEnd = start + 2;
+        }
+      });
+
+      loadData();
+    </script>
+  </body>
+</html>

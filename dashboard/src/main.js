@@ -64,8 +64,8 @@ function cleanAddress(addr) {
 
 async function loadData() {
   try {
-    const isPropertiesPage = window.location.pathname.includes('properties');
-    const endpoint = isPropertiesPage ? '/api/data-secure' : '/api/data';
+    const isPropertiesPage = window.location.pathname.includes('properties') || window.location.pathname.includes('admin');
+    const endpoint = isPropertiesPage ? '/api/admin/data' : '/api/data';
     
     const res = await fetch(`${endpoint}?t=${new Date().getTime()}`);
     
