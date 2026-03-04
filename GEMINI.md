@@ -70,3 +70,4 @@ The project consists of two main components:
 *   **ES Modules**: The project uses ECMAScript modules (`type: "module"` in `package.json`), allowing the use of `import` and `export` statements in Node.js scripts.
 *   **Vanilla Frontend**: The dashboard relies on vanilla DOM manipulation rather than a framework like React or Vue, keeping the dependencies light.
 *   **Data Flow**: The scraper acts as a cron job/ETL process that drops a static JSON payload, which the frontend then consumes statically. There is no active backend API server besides the static file hosting provided by Vite.
+*   **Validation**: All frontend UI/UX changes and additions MUST be validated locally using the `agent-browser` skill to ensure interactive elements (like modals, links, and buttons) work correctly without regressions before committing.

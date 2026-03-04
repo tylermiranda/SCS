@@ -929,7 +929,12 @@ function setupEventListeners() {
     });
   }
 
-  // About modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+}
+
+function setupAboutModal() {
   const aboutLink = document.getElementById('aboutLink');
   const aboutModalOverlay = document.getElementById('aboutModalOverlay');
   const aboutModalClose = document.getElementById('aboutModalClose');
@@ -951,15 +956,12 @@ function setupEventListeners() {
       if (e.target === e.currentTarget) closeModal();
     });
   }
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeModal();
-  });
 }
 
 // ---- Init ----
 
 function init() {
+  setupAboutModal();
   loadData();
 }
 
