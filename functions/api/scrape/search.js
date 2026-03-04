@@ -22,6 +22,24 @@ export async function onRequest(context) {
   try {
     await acceptDisclaimer();
     const properties = await scrapeSearchResults(address);
+    
+    if (!properties || properties.length === 0) {
+      try {
+        let logsStr = await env.SCS_DATA.get('logs.json');
+        let logs = logsStr ? JSON.parse(logsStr) : [];
+        logs.push({
+          timestamp: new Date().toISOString(),
+          action: 'Search API - No Results',
+          query: address,
+          error: 'No properties found for this address.'
+        });
+        if (logs.length > 500) logs = logs.slice(-500);
+        await env.SCS_DATA.put('logs.json', JSON.stringify(logs));
+      } catch (logErr) {
+        console.error('Failed to write log to KV', logErr);
+      }
+    }
+
     return new Response(JSON.stringify({ properties }), {
       headers: { 'Content-Type': 'application/json' }
     });
