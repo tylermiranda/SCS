@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "scrape": "node scraper/cli.mjs",
-    "dev": "concurrently \"vite\" \"wrangler pages dev --proxy 5173\"",
+    "dev": "concurrently \"vite\" \"npx wrangler pages dev dist\"",
     "build": "vite build",
     "preview": "vite preview"
   },
