@@ -666,10 +666,14 @@ function renderPropertyDetails(pin) {
 
 function closeModal() {
   const overlay = document.getElementById('modalOverlay');
+  const aboutOverlay = document.getElementById('aboutModalOverlay');
   if (overlay) {
     overlay.classList.remove('active');
-    document.body.style.overflow = '';
   }
+  if (aboutOverlay) {
+    aboutOverlay.classList.remove('active');
+  }
+  document.body.style.overflow = '';
 }
 
 // ---- Event Listeners ----
@@ -924,6 +928,30 @@ function setupEventListeners() {
       if (e.target === e.currentTarget) closeModal();
     });
   }
+
+  // About modal
+  const aboutLink = document.getElementById('aboutLink');
+  const aboutModalOverlay = document.getElementById('aboutModalOverlay');
+  const aboutModalClose = document.getElementById('aboutModalClose');
+
+  if (aboutLink && aboutModalOverlay) {
+    aboutLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      aboutModalOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+  }
+  
+  if (aboutModalClose) {
+    aboutModalClose.addEventListener('click', closeModal);
+  }
+  
+  if (aboutModalOverlay) {
+    aboutModalOverlay.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+  }
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
   });

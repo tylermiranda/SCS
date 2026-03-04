@@ -72,7 +72,7 @@
 
       <footer>
         <p>
-          Created by <a href="mailto:tyler.miranda@gmail.com">Tyler Miranda</a>
+          Created by <a href="mailto:tyler.miranda@gmail.com">Tyler Miranda</a> • <a href="#" id="aboutLink">About this project</a>
         </p>
         <p style="margin-top: 0.5rem; font-size: var(--text-xs); opacity: 0.7;">
           Data sourced from
@@ -84,6 +84,20 @@
           >
         </p>
       </footer>
+    </div>
+
+    <!-- About Modal -->
+    <div class="modal-overlay" id="aboutModalOverlay">
+      <div class="modal glass" id="aboutModal" style="max-width: 600px;">
+        <button class="modal-close" id="aboutModalClose">&times;</button>
+        <h2 style="margin-bottom: 1rem;">About Sedgwick County Squeeze</h2>
+        <div style="color: var(--text-secondary); line-height: 1.6; font-size: var(--text-sm);">
+          <p style="margin-bottom: 1rem;">I built this tool as a way to visualize increases (and the rare decreases) in property appraisal values. I was quite shocked to see my own property increase by 20% this past year.</p>
+          <p style="margin-bottom: 1rem;">All the information here is gathered from public information on the <a href="https://ssc.sedgwickcounty.org/propertytax/" target="_blank" rel="noopener" style="color: var(--accent-teal);">Sedgwick County website</a>. There is no proprietary or private information contained here.</p>
+          <p style="margin-bottom: 1rem;">I built this on my own free time and decided to make it free for the community. That being said, it is running on a free tier in Cloudflare.</p>
+          <p>I have open-sourced the code for it in case anyone wants to build their own version. You can find the source code here: <br><a href="https://github.com/tylermiranda/SCS" target="_blank" rel="noopener" style="color: var(--accent-teal); word-break: break-all;">https://github.com/tylermiranda/SCS</a></p>
+        </div>
+      </div>
     </div>
 
     <!-- Property Detail Modal -->
