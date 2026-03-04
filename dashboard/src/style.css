@@ -873,6 +873,11 @@ footer a:hover {
    ==================================== */
 
 @media (max-width: 768px) {
+  .site-header {
+    position: relative;
+    padding: 1rem var(--gap);
+  }
+
   .site-header h1 {
     font-size: var(--text-2xl);
   }
