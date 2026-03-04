@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.DS_Store
+.env
+*.log
+.gemini
+.planning
+.wrangler/
+data/
+dashboard/public/data.json
+*.pdf
+*.png
+test-*.mjs
+test-*.cjs
+test-*.js
+dl-pdf.mjs

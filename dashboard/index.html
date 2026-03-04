@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Sedgwick County Squeeze — property tax appraisal dashboard for Cedar Brook neighborhood in Mulvane, KS. Track year-over-year appraisal changes."
+    />
+    <title>Sedgwick County Squeeze | Tax Appraisal Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+      <header class="site-header">
+      <div class="header-content">
+        <div class="header-left">
+          <div class="header-title-wrapper" style="display: flex; align-items: center; margin-bottom: 0.25rem;">
+            <img src="/logo-icon.png" alt="Squeeze Logo" class="site-logo" />
+            <h1 style="margin-bottom: 0;">Sedgwick County <span class="accent">Squeeze</span></h1>
+          </div>
+          <p class="subtitle" style="margin-top: 0;">Search properties, track appraisal histories, and understand your taxes.</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- Search Section -->
+      <section class="search-section glass search-highlight" style="margin-bottom: 2rem; padding: 1.5rem; border-radius: 12px; text-align: center; position: relative; z-index: 10;">
+        <h2>Search for a Property</h2>
+        <p class="chart-subtitle" style="margin-bottom: 1rem;">Enter a Sedgwick County address to fetch the latest appraisal data.</p>
+        <div class="ad-hoc-search" style="justify-content: center; width: 100%; max-width: 600px; margin: 0 auto; position: relative;">
+          <input type="text" id="adHocAddress" placeholder="e.g. 525 N Main or PIN 99696" class="search-input" style="flex: 1;" />
+          <button id="adHocBtn" class="btn">Find</button>
+          
+          <div id="scrapeProgressContainer" class="scrape-progress-container glass" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 1rem; padding: 1.5rem; text-align: left;">
+            <div id="progressTitle" class="progress-title" style="font-weight: 600; margin-bottom: 1rem; font-size: var(--text-sm); color: var(--text-primary);">Fetching Property Data...</div>
+            
+            <div class="progress-steps" id="progressSteps">
+              <div class="step pending" id="step-disclaimer">
+                <span class="step-icon"></span> Accepting county disclaimer
+              </div>
+              <div class="step pending" id="step-details">
+                <span class="step-icon"></span> Fetching property details
+              </div>
+              <div class="step pending" id="step-comps">
+                <span class="step-icon"></span> Fetching comparable sales
+              </div>
+              <div class="step pending" id="step-tax">
+                <span class="step-icon"></span> Fetching tax records
+              </div>
+              <div class="step pending" id="step-calculations">
+                <span class="step-icon"></span> Running calculations & charts
+              </div>
+            </div>
+          </div>
+          
+          <!-- Validation Popup -->
+          <div id="validationPopup" class="validation-popup glass" style="display: none; width: 100%; max-width: 600px;">
+            <div class="validation-title">Verify Property</div>
+            <div id="validationResults"></div>
+            <div class="validation-actions">
+              <button id="cancelValidationBtn" class="btn btn-secondary btn-small">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: 0.75rem; max-width: 600px; margin-left: auto; margin-right: auto; text-align: left; line-height: 1.5;">
+          <strong>Supported formats:</strong> Address (<em>525 N Main</em>), PIN (<em>99696</em>), AIN (<em>124170440900100</em>), or GeoCode (<em>A 01234</em>).<br/>
+          <span style="opacity: 0.8;">* Address ranges (e.g. 500-600 N Main) are not currently supported by this tool.</span>
+        </div>
+
+        <div class="print-tips" style="display: none; padding: 2rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-top: 2rem; background: var(--glass-bg);">
+          <h3 style="color: var(--accent-rose); margin-bottom: 1rem;">Tips for Contesting Your Appraisal</h3>
+          <ul style="margin-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+            <li><strong>Check for Data Errors:</strong> Ensure the county has the correct square footage, bedroom/bathroom counts, and basement finish percentage. If the county's data is wrong, providing the correct floor plans can immediately lower your valuation.</li>
+            <li><strong>Analyze Comparable Sales:</strong> Look at the "Comparable Sales" section in this report. Are those houses truly comparable to yours in terms of age, condition, and location? If not, find better comps from recent sales in your neighborhood.</li>
+            <li><strong>Document Maintenance Issues:</strong> The county assumes your home is in "average" condition for its age. If you have significant deferred maintenance, structural issues, or need a new roof, take detailed photos and contractor estimates to your hearing.</li>
+            <li><strong>Bring an Independent Appraisal:</strong> If you recently refinanced or bought the home, a fee appraisal from a licensed appraiser within the last 12 months is often the strongest evidence you can provide.</li>
+            <li><strong>The Process:</strong> The informal hearing is a conversation, not a court case. Be polite, stick to the facts and data, and avoid arguing about the taxes themselves—the hearing is strictly about the market value of the property.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Educational Section -->
+      <section class="chart-section glass" id="eduSection" style="margin-bottom: 2rem; padding: 2rem; border-radius: 12px;">
+        <h2>Understanding Your Property Taxes</h2>
+        <p class="chart-subtitle" style="margin-bottom: 1.5rem;">A quick guide to navigating the Sedgwick County tax system.</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+          <div style="background: rgba(255, 255, 255, 0.03); padding: 1.25rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <h3 style="color: var(--accent-teal); font-size: var(--text-lg); margin-bottom: 0.5rem;">Appraisal Value</h3>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5;">This is the county's estimate of your property's total fair market value. It is the sum of the land value and the improvements value. This number dictates your overall tax burden.</p>
+          </div>
+          
+          <div style="background: rgba(255, 255, 255, 0.03); padding: 1.25rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <h3 style="color: var(--accent-amber); font-size: var(--text-lg); margin-bottom: 0.5rem;">Assessed Value</h3>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5;">You are not taxed on the full appraisal value. In Kansas, residential properties are assessed at <strong>11.5%</strong> of their appraised value. For example, a $100,000 home has an assessed value of $11,500.</p>
+          </div>
+          
+          <div style="background: rgba(255, 255, 255, 0.03); padding: 1.25rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <h3 style="color: var(--accent-blue); font-size: var(--text-lg); margin-bottom: 0.5rem;">Land vs. Improvements</h3>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5;"><strong>Land</strong> is the value of the dirt itself. <strong>Improvements</strong> refer to anything built on that land, such as your house, a detached garage, or an inground pool.</p>
+          </div>
+          
+          <div style="background: rgba(255, 255, 255, 0.03); padding: 1.25rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <h3 style="color: var(--accent-rose); font-size: var(--text-lg); margin-bottom: 0.5rem;">The Mill Levy & The Math</h3>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5;">A "mill" is $1 of tax for every $1,000 of assessed value. Your base tax is calculated using this exact formula: <br><br>
+            <code style="background: rgba(0,0,0,0.3); padding: 0.4rem 0.5rem; border-radius: 4px; font-family: monospace; font-size: 0.85em; display: block; border: 1px solid rgba(255,255,255,0.05); color: var(--text-primary); text-align: center;">(Assessed Value &times; Mill Levy) &divide; 1,000 = Tax</code></p>
+          </div>
+          
+          <div style="background: rgba(255, 255, 255, 0.03); padding: 1.25rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <h3 style="color: var(--accent-green); font-size: var(--text-lg); margin-bottom: 0.5rem;">Special Assessments</h3>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5;">In addition to standard taxes, your bill may include "specials". These are fixed, flat charges to pay for neighborhood infrastructure like newly paved roads, sewer lines, or lakes, rather than taxes based on your home's actual market value.</p>
+          </div>
+          
+          <div style="background: rgba(255, 255, 255, 0.03); padding: 1.25rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <h3 style="color: var(--accent-teal); font-size: var(--text-lg); margin-bottom: 0.5rem;">Important Deadlines</h3>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5;">County appraisal notices are usually mailed around <strong>March 1st</strong>. You strictly have 30 days to file an informal appeal. Property tax payments are split into two halves: the first is due <strong>Dec 20th</strong>, and the second on <strong>May 10th</strong>.</p>
+          </div>
+          
+          <div style="background: rgba(255, 255, 255, 0.03); padding: 1.25rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <h3 style="color: var(--accent-amber); font-size: var(--text-lg); margin-bottom: 0.5rem;">How to Appeal</h3>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5;">You can appeal once per year via two methods: an <strong>Informal Appeal</strong> (form on back of March 1 notice, due in 30 days) or <strong>Payment Under Protest</strong> (with your Dec 20/May 10 tax payment). Submit evidence (private appraisals, comps, damage photos) via the county's Smart File portal or to ApprHear@sedgwick.gov before your hearing. <a href="https://www.sedgwickcounty.org/appraiser/appeals/" target="_blank" rel="noopener" style="color: var(--accent-teal); text-decoration: none;">Learn more &rarr;</a></p>
+          </div>
+        </div>
+
+        <div class="print-tips" style="display: none; padding: 2rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-top: 2rem; background: var(--glass-bg);">
+          <h3 style="color: var(--accent-rose); margin-bottom: 1rem;">Tips for Contesting Your Appraisal</h3>
+          <ul style="margin-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+            <li><strong>Check for Data Errors:</strong> Ensure the county has the correct square footage, bedroom/bathroom counts, and basement finish percentage. If the county's data is wrong, providing the correct floor plans can immediately lower your valuation.</li>
+            <li><strong>Analyze Comparable Sales:</strong> Look at the "Comparable Sales" section in this report. Are those houses truly comparable to yours in terms of age, condition, and location? If not, find better comps from recent sales in your neighborhood.</li>
+            <li><strong>Document Maintenance Issues:</strong> The county assumes your home is in "average" condition for its age. If you have significant deferred maintenance, structural issues, or need a new roof, take detailed photos and contractor estimates to your hearing.</li>
+            <li><strong>Bring an Independent Appraisal:</strong> If you recently refinanced or bought the home, a fee appraisal from a licensed appraiser within the last 12 months is often the strongest evidence you can provide.</li>
+            <li><strong>The Process:</strong> The informal hearing is a conversation, not a court case. Be polite, stick to the facts and data, and avoid arguing about the taxes themselves—the hearing is strictly about the market value of the property.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Searched Property Details -->
+      <section id="searchedPropertyDetails" class="glass" style="display: none; margin-bottom: 2rem; padding: 2rem; border-radius: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+          <div>
+            <h2 id="searchResultTitle" style="margin-bottom: 0.25rem;"></h2>
+            <p class="modal-subtitle" id="searchResultSubtitle" style="margin-bottom: 0;"></p>
+          </div>
+          <button class="btn btn-secondary print-btn" onclick="window.print()" style="white-space: nowrap; display: flex; align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Export PDF
+          </button>
+        </div>
+        
+        <!-- Tax Breakdown Section -->
+        <div id="inlineTaxBreakdown" style="display: none; margin-bottom: 2rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 8px; padding: 1.5rem;">
+          <h3 style="color: var(--accent-rose); font-size: var(--text-lg); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">Estimated Tax Impact</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Current Tax (<span id="inlineCurrentTaxYear"></span>)</div>
+              <div id="inlineCurrentTaxTotal" style="font-size: var(--text-xl); font-weight: 700; color: var(--text-primary); margin: 0.25rem 0;"></div>
+              <div style="font-size: var(--text-sm); color: var(--text-secondary);"><span id="inlineCurrentTaxMonthly"></span>/mo • <span id="inlineCurrentTaxHalf"></span>/half</div>
+            </div>
+            <div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Estimated 2026 Tax</div>
+              <div id="inlineEstTaxTotal" style="font-size: var(--text-xl); font-weight: 700; color: var(--accent-rose); margin: 0.25rem 0;"></div>
+              <div style="font-size: var(--text-sm); color: var(--text-secondary);"><span id="inlineEstTaxMonthly"></span>/mo <span id="inlineEstTaxDiff" style="font-weight: 600;"></span></div>
+            </div>
+          </div>
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.1);">
+            <div style="font-family: monospace; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;"><span style="color: var(--text-muted);">Calculation:</span> <span id="inlineEstTaxFormula"></span></div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0; font-style: italic;">*Assumes the local mill levy remains unchanged from the previous year. Actual 2026 taxes may vary.</p>
+          </div>
+        </div>
+
+        <div class="modal-charts">
+          <div class="chart-container">
+            <canvas id="detailChart"></canvas>
+          </div>
+          <div class="chart-container">
+            <canvas id="detailBreakdownChart"></canvas>
+          </div>
+        </div>
+        <div class="modal-table-wrapper">
+          <table class="modal-table" id="detailTable">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Land</th>
+                <th>Improvements</th>
+                <th>Total</th>
+                <th>Change</th>
+              </tr>
+            </thead>
+            <tbody id="detailTableBody"></tbody>
+          </table>
+        </div>
+        <div class="comp-sales-section" id="compSalesSection" style="display:none">
+          <h3>Comparable Sales</h3>
+          <div class="comp-sales-summary" id="compSalesSummary"></div>
+          <div class="modal-table-wrapper">
+            <table class="modal-table" id="compSalesTable">
+              <thead>
+                <tr>
+                  <th>Ref#</th>
+                  <th>Address</th>
+                  <th>Year Built</th>
+                  <th>MKT Adj Sale Price</th>
+                </tr>
+              </thead>
+              <tbody id="compSalesBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="print-tips" style="display: none; padding: 2rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-top: 2rem; background: var(--glass-bg);">
+          <h3 style="color: var(--accent-rose); margin-bottom: 1rem;">Tips for Contesting Your Appraisal</h3>
+          <ul style="margin-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+            <li><strong>Check for Data Errors:</strong> Ensure the county has the correct square footage, bedroom/bathroom counts, and basement finish percentage. If the county's data is wrong, providing the correct floor plans can immediately lower your valuation.</li>
+            <li><strong>Analyze Comparable Sales:</strong> Look at the "Comparable Sales" section in this report. Are those houses truly comparable to yours in terms of age, condition, and location? If not, find better comps from recent sales in your neighborhood.</li>
+            <li><strong>Document Maintenance Issues:</strong> The county assumes your home is in "average" condition for its age. If you have significant deferred maintenance, structural issues, or need a new roof, take detailed photos and contractor estimates to your hearing.</li>
+            <li><strong>Bring an Independent Appraisal:</strong> If you recently refinanced or bought the home, a fee appraisal from a licensed appraiser within the last 12 months is often the strongest evidence you can provide.</li>
+            <li><strong>The Process:</strong> The informal hearing is a conversation, not a court case. Be polite, stick to the facts and data, and avoid arguing about the taxes themselves—the hearing is strictly about the market value of the property.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Summary Cards -->
+      <div class="aggregate-header" style="margin-bottom: 0.5rem;">
+        <h2>Aggregate Statistics</h2>
+        <p class="chart-subtitle" style="margin-bottom: 0;">These statistics reflect only the properties we currently have data for. The dataset grows automatically as people search for new addresses, but it does not represent every property in Sedgwick County.</p>
+      </div>
+      <section class="summary-cards" id="summaryCards">
+        <div class="card glass" id="cardAvgAppraisal">
+          <div class="card-icon">🏠</div>
+          <div class="card-value" id="avgAppraisal">—</div>
+          <div class="card-label">Avg Appraisal (2026)</div>
+        </div>
+        <div class="card glass" id="cardMedianChange">
+          <div class="card-icon">📈</div>
+          <div class="card-value" id="medianChange">—</div>
+          <div class="card-label">Median YoY Change</div>
+        </div>
+        <div class="card glass" id="cardHighest">
+          <div class="card-icon">🔝</div>
+          <div class="card-value" id="highestAppraisal">—</div>
+          <div class="card-label">Highest Appraisal</div>
+        </div>
+        <div class="card glass" id="cardLowest">
+          <div class="card-icon">📉</div>
+          <div class="card-value" id="lowestAppraisal">—</div>
+          <div class="card-label">Lowest Appraisal</div>
+        </div>
+        <div class="card glass" id="cardBiggestJump">
+          <div class="card-icon">🚀</div>
+          <div class="card-value" id="biggestJumpYear">—</div>
+          <div class="card-label" id="biggestJumpLabel">Biggest YoY Jump</div>
+        </div>
+        <div class="card glass" id="cardAvgImprovement">
+          <div class="card-icon">🧱</div>
+          <div class="card-value" id="avgImprovementRatio">—</div>
+          <div class="card-label">Avg Impr. / Land Split</div>
+        </div>
+      </section>
+
+      <!-- Neighborhood Trend Chart -->
+      <section class="chart-section glass" id="trendSection">
+        <h2>Appraisal Trend</h2>
+        <p class="chart-subtitle">
+          Average appraisal value across all <span id="trendPropertyCount"></span> saved properties
+        </p>
+        <div class="chart-container">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Distribution Chart -->
+      <section class="chart-section glass" id="distSection">
+        <h2>2026 YoY Change Distribution</h2>
+        <p class="chart-subtitle">
+          How much did each property's appraisal change from 2025 to 2026?
+        </p>
+        <div class="chart-container">
+          <canvas id="distributionChart"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Created by <a href="mailto:tyler.miranda@gmail.com">Tyler Miranda</a>
+      </p>
+      <p style="margin-top: 0.5rem; font-size: var(--text-xs); opacity: 0.7;">
+        Data sourced from
+        <a
+          href="https://ssc.sedgwickcounty.org/propertytax/"
+          target="_blank"
+          rel="noopener"
+          >Sedgwick County Property Taxes</a
+        >
+      </p>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

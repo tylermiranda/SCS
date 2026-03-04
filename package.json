@@ -1,0 +1,22 @@
+{
+  "name": "sedgwick-county-tax-scraper",
+  "version": "1.0.0",
+  "description": "Scrape and visualize Sedgwick County property tax appraisals for Cedar Brook neighborhood",
+  "type": "module",
+  "scripts": {
+    "scrape": "node scraper/cli.mjs",
+    "dev": "concurrently \"vite\" \"wrangler pages dev --proxy 5173\"",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "concurrently": "^9.2.1",
+    "node-fetch": "^3.3.2",
+    "pdf-parse": "^1.1.4"
+  },
+  "devDependencies": {
+    "vite": "^6.2.0",
+    "wrangler": "^4.70.0"
+  }
+}

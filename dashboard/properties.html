@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sedgwick County Squeeze | All Properties</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- Main Content -->
+    <div id="protectedContent">
+      <header class="site-header">
+        <div class="header-content">
+          <div class="header-left">
+            <div class="header-title-wrapper" style="display: flex; align-items: center; margin-bottom: 0.25rem;">
+              <img src="/logo-icon.png" alt="Squeeze Logo" class="site-logo" />
+              <h1 style="margin-bottom: 0;">Sedgwick County <span class="accent">Squeeze</span></h1>
+            </div>
+            <p class="subtitle" style="margin-top: 0;">All Scraped Properties</p>
+          </div>          <div class="header-right">
+            <nav class="nav-links">
+              <a href="/" class="nav-link">Dashboard</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <!-- Property Table -->
+        <section class="table-section" id="tableSection">
+          <div class="table-header">
+            <h2>All Properties</h2>
+            <div class="search-wrapper">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search by address..."
+                class="search-input"
+              />
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table id="propertyTable">
+              <thead>
+                <tr>
+                  <th data-sort="address" class="sortable">Address</th>
+                  <th data-sort="owner" class="sortable">Owner</th>
+                  <th data-sort="total2026" class="sortable active desc">
+                    2026 Appraisal
+                  </th>
+                  <th data-sort="total2025" class="sortable">2025 Appraisal</th>
+                  <th data-sort="change" class="sortable">YoY %</th>
+                  <th data-sort="changeDollar" class="sortable">YoY $</th>
+                  <th data-sort="land" class="sortable">Land</th>
+                  <th data-sort="improvements" class="sortable">Improvements</th>
+                  <th data-sort="avgCompSale" class="sortable">Avg Comp Sale</th>
+                </tr>
+              </thead>
+              <tbody id="propertyTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>
+          Created by <a href="mailto:tyler.miranda@gmail.com">Tyler Miranda</a>
+        </p>
+        <p style="margin-top: 0.5rem; font-size: var(--text-xs); opacity: 0.7;">
+          Data sourced from
+          <a
+            href="https://ssc.sedgwickcounty.org/propertytax/"
+            target="_blank"
+            rel="noopener"
+            >Sedgwick County Property Taxes</a
+          >
+        </p>
+      </footer>
+    </div>
+
+    <!-- Property Detail Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal glass" id="propertyModal">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; padding-right: 3rem;">
+          <div>
+            <h2 id="modalTitle" style="margin-bottom: 0.25rem;"></h2>
+            <p class="modal-subtitle" id="modalSubtitle" style="margin-bottom: 0;"></p>
+          </div>
+          <button class="btn btn-secondary print-btn" onclick="window.print()" style="white-space: nowrap; display: flex; align-items: center; z-index: 10;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Export PDF
+          </button>
+        </div>
+        
+        <!-- Tax Breakdown Section -->
+        <div id="modalTaxBreakdown" style="display: none; margin-bottom: 2rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 8px; padding: 1.5rem;">
+          <h3 style="color: var(--accent-rose); font-size: var(--text-lg); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">Estimated Tax Impact</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Current Tax (<span id="modalCurrentTaxYear"></span>)</div>
+              <div id="modalCurrentTaxTotal" style="font-size: var(--text-xl); font-weight: 700; color: var(--text-primary); margin: 0.25rem 0;"></div>
+              <div style="font-size: var(--text-sm); color: var(--text-secondary);"><span id="modalCurrentTaxMonthly"></span>/mo • <span id="modalCurrentTaxHalf"></span>/half</div>
+            </div>
+            <div>
+              <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Estimated 2026 Tax</div>
+              <div id="modalEstTaxTotal" style="font-size: var(--text-xl); font-weight: 700; color: var(--accent-rose); margin: 0.25rem 0;"></div>
+              <div style="font-size: var(--text-sm); color: var(--text-secondary);"><span id="modalEstTaxMonthly"></span>/mo <span id="modalEstTaxDiff" style="font-weight: 600;"></span></div>
+            </div>
+          </div>
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.1);">
+            <div style="font-family: monospace; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;"><span style="color: var(--text-muted);">Calculation:</span> <span id="modalEstTaxFormula"></span></div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0; font-style: italic;">*Assumes the local mill levy remains unchanged from the previous year. Actual 2026 taxes may vary.</p>
+          </div>
+        </div>
+
+        <div class="modal-charts">
+          <div class="chart-container">
+            <canvas id="detailChart"></canvas>
+          </div>
+          <div class="chart-container">
+            <canvas id="detailBreakdownChart"></canvas>
+          </div>
+        </div>
+        <div class="modal-table-wrapper">
+          <table class="modal-table" id="detailTable">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Land</th>
+                <th>Improvements</th>
+                <th>Total</th>
+                <th>Change</th>
+              </tr>
+            </thead>
+            <tbody id="detailTableBody"></tbody>
+          </table>
+        </div>
+        <div class="comp-sales-section" id="compSalesSection" style="display:none">
+          <h3>Comparable Sales</h3>
+          <div class="comp-sales-summary" id="compSalesSummary"></div>
+          <div class="modal-table-wrapper">
+            <table class="modal-table" id="compSalesTable">
+              <thead>
+                <tr>
+                  <th>Ref#</th>
+                  <th>Address</th>
+                  <th>Year Built</th>
+                  <th>MKT Adj Sale Price</th>
+                </tr>
+              </thead>
+              <tbody id="compSalesBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="print-tips" style="display: none; padding: 2rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-top: 2rem; background: var(--glass-bg);">
+          <h3 style="color: var(--accent-rose); margin-bottom: 1rem;">Tips for Contesting Your Appraisal</h3>
+          <ul style="margin-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+            <li><strong>Check for Data Errors:</strong> Ensure the county has the correct square footage, bedroom/bathroom counts, and basement finish percentage. If the county's data is wrong, providing the correct floor plans can immediately lower your valuation.</li>
+            <li><strong>Analyze Comparable Sales:</strong> Look at the "Comparable Sales" section in this report. Are those houses truly comparable to yours in terms of age, condition, and location? If not, find better comps from recent sales in your neighborhood.</li>
+            <li><strong>Document Maintenance Issues:</strong> The county assumes your home is in "average" condition for its age. If you have significant deferred maintenance, structural issues, or need a new roof, take detailed photos and contractor estimates to your hearing.</li>
+            <li><strong>Bring an Independent Appraisal:</strong> If you recently refinanced or bought the home, a fee appraisal from a licensed appraiser within the last 12 months is often the strongest evidence you can provide.</li>
+            <li><strong>The Process:</strong> The informal hearing is a conversation, not a court case. Be polite, stick to the facts and data, and avoid arguing about the taxes themselves—the hearing is strictly about the market value of the property.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
