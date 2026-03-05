@@ -15,7 +15,7 @@ function sleep(ms) {
 
 let cookiesMap = new Map();
 
-async function fetchWithCookies(url, options = {}) {
+export async function fetchWithCookies(url, options = {}) {
   const headers = { ...options.headers };
   const cookieStr = Array.from(cookiesMap.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
   if (cookieStr) headers['Cookie'] = cookieStr;
@@ -298,14 +298,11 @@ export async function scrapeComparableSales(pin) {
 
     let addresses = [];
     if (addressMatch) {
-      // The addresses usually come in a contiguous block, but they might span multiple lines if long.
-      // Often, the last address is the Subject property, and the rest are Comps.
-      // In this format, we split by spaces/newlines and re-join them roughly.
-      const lines = addressMatch[1].trim().split('\n').join(' ').split(/\s{2,}/);
-      // More robustly: the address block contains the addresses concatenated with spaces.
-      // We will rely on the fact that each address has a number to split them.
-      const rawAddrs = addressMatch[1].replace(/\n/g, ' ').trim();
-      addresses = rawAddrs.split(/(?=\d{2,}\s+[A-Z])/).map(a => a.trim()).filter(a => a.length > 0);
+      // Heal broken numbers caused by naive PDF extraction (e.g., "1 6 33" -> "1633")
+      const rawAddrs = addressMatch[1].replace(/\n/g, ' ').replace(/(\d)\s+(?=\d)/g, '$1').trim();
+      // Match each address starting with a number and space, continuing until the next address starts
+      const matched = rawAddrs.match(/\d+\s+[a-zA-Z][\s\S]*?(?=\s+\d+\s+[a-zA-Z]|$)/g);
+      if (matched) addresses = matched.map(a => a.trim());
     }
     
     if (compSalesValueMatch) {
