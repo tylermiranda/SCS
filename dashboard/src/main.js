@@ -682,7 +682,22 @@ function renderPropertyDetails(pin) {
     });
   } else if (inlineDetails) {
     inlineDetails.style.display = 'block';
+    document.body.classList.add('has-active-property');
     inlineDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function clearActiveProperty() {
+  const inlineDetails = document.getElementById('searchedPropertyDetails');
+  if (inlineDetails) {
+    inlineDetails.style.display = 'none';
+    document.body.classList.remove('has-active-property');
+    
+    // Optionally scroll back up to the search bar
+    const searchSection = document.querySelector('.search-section');
+    if (searchSection) {
+      searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 }
 
@@ -939,6 +954,12 @@ function setupEventListeners() {
         renderPropertyDetails(row.dataset.pin);
       }
     });
+  }
+
+  // Close inline property details
+  const closeDetailsBtn = document.getElementById('closePropertyDetailsBtn');
+  if (closeDetailsBtn) {
+    closeDetailsBtn.addEventListener('click', clearActiveProperty);
   }
 
   // Close modal

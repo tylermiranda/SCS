@@ -325,6 +325,7 @@ main {
   overflow: hidden;
   max-width: 100%;
   box-sizing: border-box;
+  transition: opacity 0.4s ease, filter 0.4s ease;
 }
 
 .chart-section h2 {
@@ -921,6 +922,25 @@ footer a {
 
 footer a:hover {
   color: var(--accent-amber);
+}
+
+/* ====================================
+   ACTIVE PROPERTY FOCUS
+   ==================================== */
+
+body.has-active-property #trendSection,
+body.has-active-property #distSection,
+body.has-active-property #eduSection {
+  opacity: 0.3;
+  filter: grayscale(0.8);
+  pointer-events: none;
+  transition: all 0.4s ease;
+}
+
+body.has-active-property #searchedPropertyDetails {
+  box-shadow: 0 0 0 2px var(--accent-amber), 0 8px 30px rgba(0,0,0,0.15);
+  position: relative;
+  z-index: 20;
 }
 
 /* ====================================
