@@ -260,11 +260,11 @@ footer {
 
 .header-stat {
   flex: 1;
-  min-width: 140px;
-  padding: 1rem 1.25rem;
+  min-width: 110px;
+  padding: 0.75rem 1rem;
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.5rem;
   border-right: 1px solid var(--border-color);
   background: transparent;
   box-shadow: none;
@@ -305,7 +305,6 @@ footer {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  white-space: nowrap;
 }
 
 /* ====================================
@@ -469,11 +468,75 @@ main {
   padding-bottom: 0.5rem;
 }
 
+.progress-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.step.active {
+  color: var(--text-primary);
+  font-weight: bold;
+}
+
+.step.done {
+  color: var(--text-secondary);
+}
+
+.step.error {
+  color: var(--accent-rose);
+}
+
 .step-icon {
-  border-radius: 0 !important; /* Square checkboxes */
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--text-muted);
+  border-radius: 0; /* Square checkboxes per current design */
+  font-size: 0.75rem;
+  font-weight: bold;
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.step.active .step-icon {
+  border-color: var(--accent-amber);
+  background-color: var(--accent-amber);
+  color: var(--bg-primary);
 }
 .step.active .step-icon::after {
-  border-radius: 0 !important;
+  content: "⋯";
+  line-height: 1;
+}
+
+.step.done .step-icon {
+  border-color: var(--accent-green, #10b981);
+  background-color: var(--accent-green, #10b981);
+  color: var(--bg-primary);
+}
+.step.done .step-icon::after {
+  content: "✓";
+}
+
+.step.error .step-icon {
+  border-color: var(--accent-rose);
+  background-color: var(--accent-rose);
+  color: var(--bg-primary);
+}
+.step.error .step-icon::after {
+  content: "✕";
 }
 
 /* Validation Popup */

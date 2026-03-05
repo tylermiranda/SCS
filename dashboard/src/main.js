@@ -115,6 +115,9 @@ function populateSummaryCards() {
     .filter(Boolean)
     .map(a => parseChangeNum(a.change));
 
+  const totalIndexedEl = document.getElementById('totalIndexed');
+  if (totalIndexedEl) totalIndexedEl.textContent = data.properties.length.toLocaleString();
+
   document.getElementById('avgAppraisal').textContent = formatCurrency(avg);
   document.getElementById('medianChange').textContent = `+${median(changes)}%`;
   document.getElementById('highestAppraisal').textContent = formatCurrency(Math.max(...totals));

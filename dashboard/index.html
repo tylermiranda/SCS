@@ -27,7 +27,7 @@
             <h1 class="newspaper-title">The Sedgwick County <span class="accent">Squeeze</span></h1>
           </div>
           <div class="newspaper-edition">
-            <span>VOL. 1</span>
+            <span>VOL. 2</span>
             <span id="currentDate"></span>
             <span>SEDGWICK COUNTY, KS</span>
           </div>
@@ -37,6 +37,13 @@
         <div class="header-stats-container" id="summaryCards">
           <div style="width: 100%; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: 0.25rem;">
             * Statistics reflect only the properties currently searched and saved to this dashboard. The dataset grows automatically as users search.
+          </div>
+          <div class="header-stat glass" title="Total number of properties currently in the database.">
+            <span class="stat-icon">📚</span>
+            <div class="stat-content">
+              <span class="stat-val" id="totalIndexed">—</span>
+              <span class="stat-lbl">Properties Indexed</span>
+            </div>
           </div>
           <div class="header-stat glass" title="Based only on properties currently searched on this site.">
             <span class="stat-icon">🏠</span>
@@ -66,7 +73,7 @@
               <span class="stat-lbl">Lowest Appraisal</span>
             </div>
           </div>
-          <div class="header-stat glass" style="flex: 1.5;">
+          <div class="header-stat glass">
             <span class="stat-icon">🚀</span>
             <div class="stat-content">
               <span class="stat-val" id="biggestJumpYear">—</span>
