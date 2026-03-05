@@ -14,3 +14,4 @@ test-*.mjs
 test-*.cjs
 test-*.js
 dl-pdf.mjs
+GEMINI.md
