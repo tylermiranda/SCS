@@ -323,6 +323,9 @@ main {
 
 .chart-section {
   padding: 2.5rem;
+  overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .chart-section h2 {
@@ -343,7 +346,9 @@ main {
 .chart-container {
   position: relative;
   width: 100%;
+  max-width: 100%;
   height: 360px;
+  min-width: 0;
 }
 
 /* ====================================
