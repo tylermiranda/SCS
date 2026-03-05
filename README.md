@@ -1,6 +1,6 @@
 # Sedgwick County Tax Scraper (SCS)
 
-A web scraping and visualization tool designed to collect property tax appraisal data from the Sedgwick County website and display it in an interactive dashboard. By default, it targets the Cedar Brook neighborhood.
+A web scraping and visualization tool designed to collect property tax appraisal data from the Sedgwick County website and display it in an interactive dashboard.
 
 ## Features
 
