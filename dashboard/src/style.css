@@ -1189,4 +1189,9 @@ body.has-active-property #searchedPropertyDetails {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+
+  #searchedPropertyDetails .print-tips {
+    display: block !important;
+    page-break-before: always;
+  }
 }

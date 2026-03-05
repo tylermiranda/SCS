@@ -704,11 +704,15 @@ function clearActiveProperty() {
 function closeModal() {
   const overlay = document.getElementById('modalOverlay');
   const aboutOverlay = document.getElementById('aboutModalOverlay');
+  const helpOverlay = document.getElementById('helpModalOverlay');
   if (overlay) {
     overlay.classList.remove('active');
   }
   if (aboutOverlay) {
     aboutOverlay.classList.remove('active');
+  }
+  if (helpOverlay) {
+    helpOverlay.classList.remove('active');
   }
   document.body.style.overflow = '';
 }
@@ -1009,11 +1013,43 @@ function populateDate() {
   }
 }
 
+function setupHelpModal() {
+  const helpModalOverlay = document.getElementById('helpModalOverlay');
+  const helpModalClose = document.getElementById('helpModalClose');
+
+  const triggers = [
+    document.getElementById('helpLink'),
+    document.getElementById('headerHelpBtn'),
+    document.getElementById('searchHelpLink')
+  ];
+
+  triggers.forEach(trigger => {
+    if (trigger && helpModalOverlay) {
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        helpModalOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      });
+    }
+  });
+  
+  if (helpModalClose) {
+    helpModalClose.addEventListener('click', closeModal);
+  }
+  
+  if (helpModalOverlay) {
+    helpModalOverlay.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+  }
+}
+
 // ---- Init ----
 
 function init() {
   populateDate();
   setupAboutModal();
+  setupHelpModal();
   loadData();
 }
 

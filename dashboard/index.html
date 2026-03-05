@@ -31,7 +31,11 @@
             <span id="currentDate"></span>
             <span>SEDGWICK COUNTY, KS</span>
           </div>
-          <p class="subtitle" style="margin-top: 0;">Search properties, track appraisal histories, and understand your taxes.</p>
+          <p class="subtitle" style="margin-top: 0; margin-bottom: 1rem;">Search properties, track appraisal histories, and understand your taxes.</p>
+          <button id="headerHelpBtn" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            Help & Appeal Guide
+          </button>
         </div>
         
         <div class="header-stats-container" id="summaryCards">
@@ -136,6 +140,7 @@
           <strong>Supported formats:</strong> Address (<em>525 N Main</em>), PIN (<em>99696</em>), AIN (<em>124170440900100</em>), or GeoCode (<em>A 01234</em>).<br/>
           <span style="opacity: 0.8;">* Address ranges (e.g. 500-600 N Main) are not currently supported by this tool.</span>
           <div style="margin-top: 0.5rem; display: flex; gap: 1rem;">
+            <a href="javascript:void(0)" id="searchHelpLink" class="county-link" style="color: var(--accent-rose);">📖 Help & Appeal Guide</a>
             <a href="https://gismaps.sedgwickcounty.org/mlr/" target="_blank" rel="noopener" class="county-link">🗺️ Find your GeoCode (GIS)</a>
             <a href="https://ssc.sedgwickcounty.org/propertytax/" target="_blank" rel="noopener" class="county-link">🏛️ Official County Tax Portal</a>
           </div>
@@ -324,7 +329,7 @@
 
     <footer>
       <p>
-        Created by <a href="mailto:tyler.miranda@gmail.com">Tyler Miranda</a> • <a href="javascript:void(0)" id="aboutLink">About this project</a>
+        Created by <a href="mailto:tyler.miranda@gmail.com">Tyler Miranda</a> • <a href="javascript:void(0)" id="helpLink">Help & Guides</a> • <a href="javascript:void(0)" id="aboutLink">About this project</a>
       </p>
       <p style="margin-top: 0.5rem; font-size: var(--text-xs); opacity: 0.7;">
         Data sourced from
@@ -336,6 +341,37 @@
         >
       </p>
     </footer>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="helpModalOverlay">
+      <div class="modal glass" id="helpModal" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+        <button class="modal-close" id="helpModalClose">&times;</button>
+        <h2 style="margin-bottom: 1.5rem;">Help & Appeal Guide</h2>
+        
+        <div style="color: var(--text-secondary); line-height: 1.6; font-size: var(--text-sm);">
+          <h3 style="color: var(--accent-teal); margin-top: 0.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem;">How to Search</h3>
+          <p style="margin-bottom: 1rem;">To look up a property, use the search bar at the top of the page. You can use any of the following formats:</p>
+          <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+            <li><strong>Address:</strong> e.g., <em>525 N Main</em></li>
+            <li><strong>PIN:</strong> e.g., <em>99696</em></li>
+            <li><strong>AIN:</strong> e.g., <em>124170440900100</em></li>
+            <li><strong>GeoCode:</strong> e.g., <em>A 01234</em></li>
+          </ul>
+          <p style="margin-bottom: 1rem; color: var(--accent-amber);"><em>Note: Hyphenated address ranges (e.g., 500-600 N Main) are not supported. Please use an exact address or PIN.</em></p>
+
+          <h3 style="color: var(--accent-rose); margin-top: 2rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem;">Preparing for an Appeal</h3>
+          <p style="margin-bottom: 1rem;">If you believe your property's appraised value is too high, you can use the data in this dashboard to help build your case.</p>
+          <ul style="margin-left: 1.5rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+            <li><strong>1. Check for Data Errors:</strong> Ensure the county has the correct square footage, bedroom/bathroom counts, and basement finish percentage. If the county's data is wrong, providing the correct floor plans can immediately lower your valuation.</li>
+            <li><strong>2. Analyze Comparable Sales:</strong> Look at the "Comparable Sales" section after searching for your property. Are those houses truly comparable to yours in terms of age, condition, and location? If the county used newer or much nicer homes as comps, you can argue they aren't appropriate. Find better comps from recent sales in your neighborhood to present.</li>
+            <li><strong>3. Document Maintenance Issues:</strong> The county assumes your home is in "average" condition for its age. If you have significant deferred maintenance, structural issues, or need a new roof, take detailed photos and contractor estimates to your hearing.</li>
+            <li><strong>4. Bring an Independent Appraisal:</strong> If you recently refinanced or bought the home, a fee appraisal from a licensed appraiser within the last 12 months is often the strongest evidence you can provide.</li>
+            <li><strong>5. Export Your Data:</strong> Use the "Export PDF" button on your property's detail page to print out your appraisal history and comparable sales. Bring these printed documents to your hearing.</li>
+            <li><strong>6. The Process:</strong> The informal hearing is a conversation, not a court case. Be polite, stick to the facts and data, and avoid arguing about the taxes themselves—the hearing is strictly about the market value of the property.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
 
     <!-- About Modal -->
     <div class="modal-overlay" id="aboutModalOverlay">
