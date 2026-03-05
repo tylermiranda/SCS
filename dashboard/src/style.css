@@ -749,6 +749,8 @@ tbody td {
 
 .modal-table-wrapper {
   border: 2px solid var(--border-color);
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .modal-table thead th {
