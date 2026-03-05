@@ -1002,17 +1002,17 @@ footer a:hover {
   .site-header h1 {
     font-size: var(--text-2xl);
   }
-  
+
   .validation-popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    margin: 0;
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: 100%;
+    margin: 1rem 0 0 0;
+    box-sizing: border-box;
   }
 }
-
 /* ====================================
    PRINT STYLES (For PDF Export)
    ==================================== */
