@@ -256,9 +256,9 @@ function renderDistributionChart() {
   const sortedKeys = Object.keys(buckets).sort((a, b) => parseChangeNum(a) - parseChangeNum(b));
   const colors = sortedKeys.map(k => {
     const val = parseChangeNum(k);
-    if (val >= 20) return '#f43f5e';
-    if (val >= 10) return '#f59e0b';
-    return '#22c55e';
+    if (val >= 20) return '#d32f2f'; // Dark red for big increases
+    if (val >= 10) return '#ff5500'; // Squeeze Orange
+    return '#2e7d32'; // Forest green
   });
 
   if (distChartInstance) distChartInstance.destroy();
@@ -270,10 +270,10 @@ function renderDistributionChart() {
       datasets: [{
         label: 'Properties',
         data: sortedKeys.map(k => buckets[k]),
-        backgroundColor: colors.map(c => c + '40'),
-        borderColor: colors,
-        borderWidth: 1.5,
-        borderRadius: 6,
+        backgroundColor: colors.map(c => c),
+        borderColor: '#111111',
+        borderWidth: 1,
+        borderRadius: 0,
         maxBarThickness: 60,
       }],
     },
@@ -283,13 +283,15 @@ function renderDistributionChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: 'rgba(26, 34, 54, 0.95)',
-          titleColor: '#f1f5f9',
-          bodyColor: '#94a3b8',
-          borderColor: 'rgba(255, 255, 255, 0.1)',
+          backgroundColor: '#ffffff',
+          titleColor: '#111111',
+          bodyColor: '#444444',
+          borderColor: '#111111',
           borderWidth: 1,
-          cornerRadius: 8,
+          cornerRadius: 0,
           padding: 12,
+          titleFont: { family: "'Instrument Serif', serif", size: 16 },
+          bodyFont: { family: "'JetBrains Mono', monospace", size: 13 },
           callbacks: {
             label: (ctx) => `${ctx.parsed.y} properties`,
           },
@@ -297,14 +299,14 @@ function renderDistributionChart() {
       },
       scales: {
         x: {
-          grid: { display: false },
-          ticks: { color: '#64748b', font: { size: 12 } },
+          grid: { display: false, drawBorder: true, borderColor: '#111111' },
+          ticks: { color: '#777777', font: { family: "'JetBrains Mono', monospace", size: 12 } },
         },
         y: {
-          grid: { color: 'rgba(255, 255, 255, 0.04)' },
+          grid: { color: '#dcd7cb', drawBorder: false },
           ticks: {
-            color: '#64748b',
-            font: { size: 12 },
+            color: '#777777',
+            font: { family: "'JetBrains Mono', monospace", size: 12 },
             stepSize: 5,
           },
         },
@@ -457,9 +459,6 @@ function renderPropertyDetails(pin) {
   const ctx1El = document.getElementById('detailChart');
   if (ctx1El) {
     const ctx1 = ctx1El.getContext('2d');
-    const gradient1 = ctx1.createLinearGradient(0, 0, 0, 280);
-    gradient1.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-    gradient1.addColorStop(1, 'rgba(59, 130, 246, 0)');
 
     detailChart = new Chart(ctx1, {
       type: 'line',
@@ -468,16 +467,16 @@ function renderPropertyDetails(pin) {
         datasets: [{
           label: 'Total Appraisal',
           data: appraisals.map(a => a.total),
-          borderColor: '#3b82f6',
-          backgroundColor: gradient1,
-          fill: true,
-          tension: 0.4,
+          borderColor: '#111111',
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0,
           pointRadius: 4,
           pointHoverRadius: 7,
-          pointBackgroundColor: '#3b82f6',
-          pointBorderColor: '#0a0e1a',
+          pointBackgroundColor: '#111111',
+          pointBorderColor: '#111111',
           pointBorderWidth: 2,
-          borderWidth: 2.5,
+          borderWidth: 2,
         }],
       },
       options: {
@@ -488,26 +487,31 @@ function renderPropertyDetails(pin) {
           title: {
             display: true,
             text: 'Total Appraisal Over Time',
-            color: '#94a3b8',
-            font: { size: 13, weight: 600 },
+            color: '#111111',
+            font: { family: "'Instrument Serif', serif", size: 18, weight: 400 },
             padding: { bottom: 12 },
           },
           tooltip: {
-            backgroundColor: 'rgba(26, 34, 54, 0.95)',
-            titleColor: '#f1f5f9',
-            bodyColor: '#94a3b8',
-            borderColor: 'rgba(255, 255, 255, 0.1)',
+            backgroundColor: '#ffffff',
+            titleColor: '#111111',
+            bodyColor: '#444444',
+            borderColor: '#111111',
             borderWidth: 1,
-            cornerRadius: 8,
+            cornerRadius: 0,
             padding: 12,
+            titleFont: { family: "'Instrument Serif', serif", size: 16 },
+            bodyFont: { family: "'JetBrains Mono', monospace", size: 13 },
             callbacks: { label: (ctx) => formatCurrency(ctx.parsed.y) },
           },
         },
         scales: {
-          x: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#64748b' } },
+          x: { 
+            grid: { display: false, drawBorder: true, borderColor: '#111111' }, 
+            ticks: { color: '#777777', font: { family: "'JetBrains Mono', monospace", size: 12 } } 
+          },
           y: {
-            grid: { color: 'rgba(255, 255, 255, 0.04)' },
-            ticks: { color: '#64748b', callback: (v) => formatCurrency(v) },
+            grid: { color: '#dcd7cb', drawBorder: false },
+            ticks: { color: '#777777', font: { family: "'JetBrains Mono', monospace", size: 12 }, callback: (v) => formatCurrency(v) },
           },
         },
       },
@@ -528,18 +532,18 @@ function renderPropertyDetails(pin) {
           {
             label: 'Land',
             data: appraisals.map(a => a.land),
-            backgroundColor: 'rgba(245, 158, 11, 0.6)',
-            borderColor: '#f59e0b',
+            backgroundColor: '#ff5500',
+            borderColor: '#111111',
             borderWidth: 1,
-            borderRadius: 4,
+            borderRadius: 0,
           },
           {
             label: 'Improvements',
             data: appraisals.map(a => a.improvements),
-            backgroundColor: 'rgba(45, 212, 191, 0.6)',
-            borderColor: '#2dd4bf',
+            backgroundColor: '#111111',
+            borderColor: '#111111',
             borderWidth: 1,
-            borderRadius: 4,
+            borderRadius: 0,
           },
         ],
       },
@@ -549,36 +553,38 @@ function renderPropertyDetails(pin) {
         plugins: {
           legend: {
             position: 'top',
-            labels: { color: '#94a3b8', usePointStyle: true, pointStyle: 'rectRounded' },
+            labels: { color: '#444444', font: { family: "'JetBrains Mono', monospace", size: 12 }, usePointStyle: true, pointStyle: 'rect' },
           },
           title: {
             display: true,
             text: 'Land vs Improvements',
-            color: '#94a3b8',
-            font: { size: 13, weight: 600 },
+            color: '#111111',
+            font: { family: "'Instrument Serif', serif", size: 18, weight: 400 },
             padding: { bottom: 12 },
           },
           tooltip: {
-            backgroundColor: 'rgba(26, 34, 54, 0.95)',
-            titleColor: '#f1f5f9',
-            bodyColor: '#94a3b8',
-            borderColor: 'rgba(255, 255, 255, 0.1)',
+            backgroundColor: '#ffffff',
+            titleColor: '#111111',
+            bodyColor: '#444444',
+            borderColor: '#111111',
             borderWidth: 1,
-            cornerRadius: 8,
+            cornerRadius: 0,
             padding: 12,
+            titleFont: { family: "'Instrument Serif', serif", size: 16 },
+            bodyFont: { family: "'JetBrains Mono', monospace", size: 13 },
             callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}` },
           },
         },
         scales: {
           x: {
             stacked: true,
-            grid: { display: false },
-            ticks: { color: '#64748b' },
+            grid: { display: false, drawBorder: true, borderColor: '#111111' },
+            ticks: { color: '#777777', font: { family: "'JetBrains Mono', monospace", size: 12 } },
           },
           y: {
             stacked: true,
-            grid: { color: 'rgba(255, 255, 255, 0.04)' },
-            ticks: { color: '#64748b', callback: (v) => formatCurrency(v) },
+            grid: { color: '#dcd7cb', drawBorder: false },
+            ticks: { color: '#777777', font: { family: "'JetBrains Mono', monospace", size: 12 }, callback: (v) => formatCurrency(v) },
           },
         },
       },
@@ -610,10 +616,19 @@ function renderPropertyDetails(pin) {
   const compSummary = document.getElementById('compSalesSummary');
   const compBody = document.getElementById('compSalesBody');
 
+  console.log("Comp section debug:", {
+    hasCompSection: !!compSection,
+    hasCompSummary: !!compSummary,
+    hasCompBody: !!compBody,
+    comparableSales: property.comparableSales
+  });
+
   if (compSection && compSummary && compBody) {
     if (property.comparableSales?.comps?.length > 0) {
       const cs = property.comparableSales;
-      compSection.style.display = '';
+      compSection.style.display = 'block';
+      const tableWrapper = compSection.querySelector('.modal-table-wrapper');
+      if (tableWrapper) tableWrapper.style.display = 'block';
 
       compSummary.innerHTML = `
         <div class="comp-stats">
@@ -641,7 +656,11 @@ function renderPropertyDetails(pin) {
         </tr>
       `).join('');
     } else {
-      compSection.style.display = 'none';
+      compSection.style.display = 'block';
+      compSummary.innerHTML = '<p style="color: var(--text-muted); font-style: italic; text-align: center; padding: 1rem 0;">No comparable sales records exist for this property in the county database.</p>';
+      compBody.innerHTML = '';
+      const tableWrapper = compSection.querySelector('.modal-table-wrapper');
+      if (tableWrapper) tableWrapper.style.display = 'none';
     }
   }
 
