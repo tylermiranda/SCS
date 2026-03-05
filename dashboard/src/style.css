@@ -134,6 +134,33 @@ footer {
   gap: 1.5rem;
 }
 
+.newspaper-title {
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+  font-style: normal;
+}
+
+@media (max-width: 768px) {
+  .newspaper-title {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .newspaper-title {
+    font-size: 1.8rem;
+  }
+}
+
+.newspaper-title .accent {
+  color: var(--accent-amber);
+  font-style: italic;
+}
+
 .site-header h1 {
   font-size: var(--text-4xl);
   font-style: italic;
