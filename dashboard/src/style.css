@@ -161,6 +161,30 @@ footer {
   font-style: italic;
 }
 
+.newspaper-edition {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.4rem 0;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 480px) {
+  .newspaper-edition {
+    font-size: 0.6rem;
+    padding: 0.25rem 0;
+  }
+}
+
 .site-header h1 {
   font-size: var(--text-4xl);
   font-style: italic;

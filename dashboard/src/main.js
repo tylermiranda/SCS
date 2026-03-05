@@ -977,9 +977,18 @@ function setupAboutModal() {
   }
 }
 
+function populateDate() {
+  const dateEl = document.getElementById('currentDate');
+  if (dateEl) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    dateEl.textContent = new Date().toLocaleDateString('en-US', options).toUpperCase();
+  }
+}
+
 // ---- Init ----
 
 function init() {
+  populateDate();
   setupAboutModal();
   loadData();
 }
