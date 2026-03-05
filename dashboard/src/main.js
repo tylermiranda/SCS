@@ -104,7 +104,7 @@ function populateSummaryCards() {
   const latestYear = 2026;
   const totals = data.properties
     .map(p => getLatestAppraisal(p, latestYear))
-    .filter(Boolean)
+    .filter(a => a && a.total > 0)
     .map(a => a.total);
 
   if (totals.length === 0) return;
