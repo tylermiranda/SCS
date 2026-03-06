@@ -419,7 +419,24 @@ function renderPropertyDetails(pin) {
       const percentIncrease = (latestAppraisal.total - prevAppraisal.total) / prevAppraisal.total;
       
       const currentTax = property.taxBill.amount;
-      const estNewTax = currentTax * (1 + percentIncrease);
+
+      let estNewTax = 0;
+      let formulaHTML = "";
+
+      const genTax = property.taxBill.genTax;
+      const specials = property.taxBill.specials;
+
+      if (typeof genTax === 'number' && typeof specials === 'number') {
+        const estNewGenTax = genTax * (1 + percentIncrease);
+        estNewTax = estNewGenTax + specials;
+        const pctStr = percentIncrease >= 0 ? `+${Math.round(percentIncrease * 100)}%` : `${Math.round(percentIncrease * 100)}%`;
+        formulaHTML = `[${formatCurrency(genTax)} <span style="opacity:0.5;">(Gen Tax)</span> &times; ${(1 + percentIncrease).toFixed(3)} <span style="opacity:0.5;">(${pctStr} Appr. Change)</span>] + ${formatCurrency(specials)} <span style="opacity:0.5;">(Specials)</span> = <strong>${formatCurrency(estNewTax)}</strong>`;
+      } else {
+        estNewTax = currentTax * (1 + percentIncrease);
+        const pctStr = percentIncrease >= 0 ? `+${Math.round(percentIncrease * 100)}%` : `${Math.round(percentIncrease * 100)}%`;
+        formulaHTML = `${formatCurrency(currentTax)} <span style="opacity:0.5;">(${property.taxBill.year} Tax)</span> &times; ${(1 + percentIncrease).toFixed(3)} <span style="opacity:0.5;">(${pctStr} YoY Appr. Change)</span> = <strong>${formatCurrency(estNewTax)}</strong>`;
+      }
+
       const monthlyDiff = (estNewTax - currentTax) / 12;
 
       document.getElementById(`${prefix}CurrentTaxYear`).textContent = property.taxBill.year;
@@ -429,7 +446,7 @@ function renderPropertyDetails(pin) {
 
       document.getElementById(`${prefix}EstTaxTotal`).textContent = formatCurrency(estNewTax);
       document.getElementById(`${prefix}EstTaxMonthly`).textContent = formatCurrency(estNewTax / 12);
-      
+
       const diffEl = document.getElementById(`${prefix}EstTaxDiff`);
       if (monthlyDiff > 0) {
         diffEl.textContent = `(+${formatCurrency(monthlyDiff)}/mo)`;
@@ -441,11 +458,10 @@ function renderPropertyDetails(pin) {
         diffEl.textContent = '(No change)';
         diffEl.style.color = 'var(--text-muted)';
       }
-      
+
       const formulaEl = document.getElementById(`${prefix}EstTaxFormula`);
       if (formulaEl) {
-        const pctStr = percentIncrease >= 0 ? `+${Math.round(percentIncrease * 100)}%` : `${Math.round(percentIncrease * 100)}%`;
-        formulaEl.innerHTML = `${formatCurrency(currentTax)} <span style="opacity:0.5;">(${property.taxBill.year} Tax)</span> &times; ${(1 + percentIncrease).toFixed(3)} <span style="opacity:0.5;">(${pctStr} YoY Appr. Change)</span> = <strong>${formatCurrency(estNewTax)}</strong>`;
+        formulaEl.innerHTML = formulaHTML;
       }
     } else {
       taxSection.style.display = 'none';
