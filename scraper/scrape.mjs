@@ -221,10 +221,16 @@ export async function scrapeTaxBill(pin) {
         // 0: Year, 1: Rate, 2: Gen Tax, 3: Specials, 4: Interest, 5: Fees, 6: Total
         const amountStr = $(cells[6]).text().trim();
         const amount = parseCurrency(amountStr);
+        const rate = parseFloat($(cells[1]).text().trim()) || 0;
+        const genTax = parseCurrency($(cells[2]).text().trim());
+        const specials = parseCurrency($(cells[3]).text().trim());
         if (amount > 0) {
           taxBill = {
             year,
-            amount
+            amount,
+            rate,
+            genTax,
+            specials
           };
         }
       }
