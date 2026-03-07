@@ -10,3 +10,13 @@ CREATE TABLE properties (
 
 CREATE INDEX idx_properties_address ON properties(address);
 CREATE INDEX idx_properties_owner ON properties(owner);
+
+DROP TABLE IF EXISTS logs;
+
+CREATE TABLE logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    action TEXT,
+    query TEXT,
+    error TEXT
+);
