@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS properties;
-
-CREATE TABLE properties (
+CREATE TABLE IF NOT EXISTS properties (
     pin TEXT PRIMARY KEY,
     address TEXT,
     owner TEXT,
@@ -8,12 +6,10 @@ CREATE TABLE properties (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_properties_address ON properties(address);
-CREATE INDEX idx_properties_owner ON properties(owner);
+CREATE INDEX IF NOT EXISTS idx_properties_address ON properties(address);
+CREATE INDEX IF NOT EXISTS idx_properties_owner ON properties(owner);
 
-DROP TABLE IF EXISTS logs;
-
-CREATE TABLE logs (
+CREATE TABLE IF NOT EXISTS logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     action TEXT,
