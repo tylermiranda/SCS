@@ -3,6 +3,18 @@ import fs from 'fs';
 import path from 'path';
 
 try {
+  // Cloudflare Pages and other CI environments often do a shallow clone.
+  // We need to fetch the full history to generate a complete changelog.
+  try {
+    const isShallow = execSync('git rev-parse --is-shallow-repository').toString().trim();
+    if (isShallow === 'true') {
+      console.log('Shallow repository detected. Fetching full history...');
+      execSync('git fetch --unshallow', { stdio: 'inherit' });
+    }
+  } catch (e) {
+    console.log('Note: Could not check or fetch shallow history. Proceeding with available commits.');
+  }
+
   const output = execSync('git log -n 50 --pretty=format:"%h%n%ad%n%s%n%b%n---END_COMMIT---" --date=short').toString();
   const rawCommits = output.split('---END_COMMIT---');
   
