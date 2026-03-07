@@ -732,7 +732,7 @@ function closeModal() {
     helpOverlay.classList.remove('active');
   }
   if (changelogOverlay) {
-    changelogOverlay.style.display = 'none';
+    changelogOverlay.classList.remove('active');
   }
   document.body.style.overflow = '';
 }
@@ -1071,7 +1071,7 @@ function setupHelpModal() {
 
   if (changelogLink) {
     changelogLink.addEventListener('click', async () => {
-      changelogModalOverlay.style.display = 'flex';
+      changelogModalOverlay.classList.add('active');
       document.body.style.overflow = 'hidden';
       try {
         const res = await fetch('/changelog.json?t=' + new Date().getTime());
