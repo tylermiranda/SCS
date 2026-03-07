@@ -8,6 +8,7 @@ dist/
 .wrangler/
 data/
 dashboard/public/data.json
+dashboard/public/changelog.json
 *.pdf
 *.png
 test-*.mjs

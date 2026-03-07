@@ -329,7 +329,7 @@
 
     <footer>
       <p>
-        Created by <a href="mailto:tyler.miranda@gmail.com">Tyler Miranda</a> • <a href="javascript:void(0)" id="helpLink">Help & Guides</a> • <a href="javascript:void(0)" id="aboutLink">About this project</a>
+        Created by <a href="mailto:tyler.miranda@gmail.com">Tyler Miranda</a> • <a href="javascript:void(0)" id="helpLink">Help & Guides</a> • <a href="javascript:void(0)" id="aboutLink">About this project</a> • <a href="javascript:void(0)" id="changelogLink">Changelog</a>
       </p>
       <p style="margin-top: 0.5rem; font-size: var(--text-xs); opacity: 0.7;">
         Data sourced from
@@ -383,6 +383,17 @@
           <p style="margin-bottom: 1rem;">All the information here is gathered from public information on the <a href="https://ssc.sedgwickcounty.org/propertytax/" target="_blank" rel="noopener" style="color: var(--accent-teal);">Sedgwick County website</a>. There is no proprietary or private information contained here.</p>
           <p style="margin-bottom: 1rem;">I built this on my own free time and decided to make it free for the community. That being said, it is running on a free tier in Cloudflare.</p>
           <p>I have open-sourced the code for it in case anyone wants to build their own version. You can find the source code here: <br><a href="https://github.com/tylermiranda/SCS" target="_blank" rel="noopener" style="color: var(--accent-teal); word-break: break-all;">https://github.com/tylermiranda/SCS</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Changelog Modal -->
+    <div class="modal-overlay" id="changelogModalOverlay">
+      <div class="modal glass" id="changelogModal" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <button class="modal-close" id="changelogModalClose">&times;</button>
+        <h2 style="margin-bottom: 1.5rem;">Changelog</h2>
+        <div id="changelogContent" style="color: var(--text-secondary); line-height: 1.6; font-size: var(--text-sm);">
+          Loading...
         </div>
       </div>
     </div>
