@@ -15,7 +15,7 @@ try {
     console.log('Note: Could not check or fetch shallow history. Proceeding with available commits.');
   }
 
-  const output = execSync('git log -n 50 --pretty=format:"%h%n%ad%n%s%n%b%n---END_COMMIT---" --date=short').toString();
+  const output = execSync('git log origin/main -n 50 --pretty=format:"%h%n%ad%n%s%n%b%n---END_COMMIT---" --date=short || git log main -n 50 --pretty=format:"%h%n%ad%n%s%n%b%n---END_COMMIT---" --date=short || git log -n 50 --pretty=format:"%h%n%ad%n%s%n%b%n---END_COMMIT---" --date=short').toString();
   const rawCommits = output.split('---END_COMMIT---');
   
   const changelog = [];
