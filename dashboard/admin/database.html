@@ -44,16 +44,23 @@
 
       <main>
         <section class="editor-section" style="margin-top: 1rem;">
-          <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <div class="table-header" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;">
             <div>
-              <h2>Raw Database Editor</h2>
-              <p class="subtitle" style="margin-top: 0;">Edit the properties array stored in Cloudflare KV.</p>
+              <h2>Property Database Editor</h2>
+              <p class="subtitle" style="margin-top: 0;">Directly edit property JSON records stored in Cloudflare D1.</p>
             </div>
-            <button id="saveBtn" class="btn">Save Changes</button>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="text" id="pinInput" placeholder="Enter Property PIN" style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--glass-border); background: var(--bg-elevated); color: var(--text-primary); outline: none;" />
+                <button id="loadBtn" class="btn btn-secondary">Load</button>
+              </div>
+              <button id="saveBtn" class="btn" disabled>Save Changes</button>
+            </div>
           </div>
           
           <div class="editor-container">
-            <textarea id="jsonEditor" spellcheck="false">Loading data...</textarea>
+            <textarea id="jsonEditor" spellcheck="false" disabled>Enter a PIN above and click Load to edit a property.</textarea>
           </div>
         </section>
       </main>
@@ -62,9 +69,13 @@
     <div id="toast" class="toast"></div>
 
     <script>
+      const pinInput = document.getElementById('pinInput');
+      const loadBtn = document.getElementById('loadBtn');
       const editor = document.getElementById('jsonEditor');
       const saveBtn = document.getElementById('saveBtn');
       const toast = document.getElementById('toast');
+
+      let currentPin = null;
 
       function showToast(msg, type = 'success') {
         toast.textContent = msg;
@@ -72,37 +83,65 @@
         setTimeout(() => toast.classList.remove('show'), 3000);
       }
 
-      async function loadData() {
+      loadBtn.addEventListener('click', async () => {
+        const pin = pinInput.value.trim();
+        if (!pin) {
+          showToast('Please enter a PIN', 'error');
+          return;
+        }
+
         try {
+          loadBtn.disabled = true;
           saveBtn.disabled = true;
-          const res = await fetch('/api/admin/data?t=' + Date.now());
-          if (!res.ok) throw new Error('Failed to load data');
+          editor.disabled = true;
+          editor.value = 'Loading...';
+          
+          const res = await fetch('/api/admin/data?pin=' + encodeURIComponent(pin) + '&t=' + Date.now());
+          
+          if (!res.ok) {
+            if (res.status === 404) throw new Error('Property not found in database.');
+            throw new Error('Failed to load data');
+          }
+          
           const data = await res.json();
-          editor.value = JSON.stringify(data, null, 2);
+          if (data.property) {
+            currentPin = pin;
+            editor.value = JSON.stringify(data.property, null, 2);
+            editor.disabled = false;
+            saveBtn.disabled = false;
+          } else {
+             throw new Error('Invalid response from server.');
+          }
         } catch (err) {
           console.error(err);
-          editor.value = 'Error loading data. Make sure you are authenticated.';
+          editor.value = err.message || 'Error loading data.';
+          currentPin = null;
         } finally {
-          saveBtn.disabled = false;
+          loadBtn.disabled = false;
         }
-      }
+      });
 
       saveBtn.addEventListener('click', async () => {
+        if (!currentPin) return;
+
         try {
           const content = editor.value;
           const parsed = JSON.parse(content);
           
-          if (!parsed.properties || !Array.isArray(parsed.properties)) {
-            throw new Error('Invalid JSON: Must contain a "properties" array.');
+          if (!parsed.pin) {
+            throw new Error('Invalid JSON: Property must have a "pin" field.');
+          }
+          if (parsed.pin !== currentPin) {
+             throw new Error(`PIN mismatch. You loaded ${currentPin} but JSON has ${parsed.pin}. Changing PINs is not supported here.`);
           }
 
           saveBtn.disabled = true;
           saveBtn.textContent = 'Saving...';
 
           const res = await fetch('/api/admin/data', {
-            method: 'POST',
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(parsed)
+            body: JSON.stringify({ property: parsed })
           });
 
           if (!res.ok) {
@@ -110,7 +149,7 @@
             throw new Error(errData.error || 'Failed to save');
           }
 
-          showToast('Database saved successfully!');
+          showToast('Property saved successfully!');
         } catch (err) {
           showToast(err.message, 'error');
         } finally {
@@ -129,8 +168,6 @@
           this.selectionStart = this.selectionEnd = start + 2;
         }
       });
-
-      loadData();
     </script>
   </body>
 </html>

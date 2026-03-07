@@ -77,18 +77,11 @@ export async function onRequest(context) {
 `));
     } catch (error) {
       try {
-        let logsStr = await env.SCS_DATA.get('logs.json');
-        let logs = logsStr ? JSON.parse(logsStr) : [];
-        logs.push({
-          timestamp: new Date().toISOString(),
-          action: 'Stream API Failed',
-          query: `PIN: ${pin}, Address: ${address}`,
-          error: error.message || String(error)
-        });
-        if (logs.length > 500) logs = logs.slice(-500);
-        await env.SCS_DATA.put('logs.json', JSON.stringify(logs));
+        await env.DB.prepare('INSERT INTO logs (action, query, error) VALUES (?, ?, ?)')
+          .bind('Stream API Failed', `PIN: ${pin}, Address: ${address}`, error.message || String(error))
+          .run();
       } catch (logErr) {
-        console.error('Failed to write log to KV', logErr);
+        console.error('Failed to write log to D1', logErr);
       }
 
       await writer.write(encoder.encode(`data: ${JSON.stringify({ error: error.message })}\n\n`));
