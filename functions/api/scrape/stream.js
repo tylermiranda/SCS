@@ -63,25 +63,13 @@ export async function onRequest(context) {
         comparableSales
       };
       
-      // Save to KV
+      // Save to D1
       try {
-        let dataStr = await env.SCS_DATA.get('data.json');
-        let data = { properties: [] };
-        if (dataStr) {
-          data = JSON.parse(dataStr);
-        }
-        
-        const existingIndex = data.properties.findIndex(p => p.pin === pin);
-        if (existingIndex !== -1) {
-          data.properties[existingIndex] = property;
-        } else {
-          data.properties.push(property);
-        }
-        data.totalProperties = data.properties.length;
-        
-        await env.SCS_DATA.put('data.json', JSON.stringify(data));
+        await env.DB.prepare('INSERT OR REPLACE INTO properties (pin, address, owner, data, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)')
+          .bind(property.pin, property.address, property.owner, JSON.stringify(property))
+          .run();
       } catch (saveError) {
-        console.error('Error saving to KV:', saveError);
+        console.error('Error saving to D1:', saveError);
       }
 
       await writer.write(encoder.encode(`data: ${JSON.stringify({ complete: true, property })}
