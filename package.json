@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "scrape": "node scraper/cli.mjs",
+    "predev": "node scripts/generate-changelog.mjs",
     "dev": "concurrently \"vite\" \"npx wrangler pages dev dist\"",
+    "prebuild": "node scripts/generate-changelog.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },

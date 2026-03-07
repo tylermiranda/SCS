@@ -721,6 +721,7 @@ function closeModal() {
   const overlay = document.getElementById('modalOverlay');
   const aboutOverlay = document.getElementById('aboutModalOverlay');
   const helpOverlay = document.getElementById('helpModalOverlay');
+  const changelogOverlay = document.getElementById('changelogModalOverlay');
   if (overlay) {
     overlay.classList.remove('active');
   }
@@ -729,6 +730,9 @@ function closeModal() {
   }
   if (helpOverlay) {
     helpOverlay.classList.remove('active');
+  }
+  if (changelogOverlay) {
+    changelogOverlay.style.display = 'none';
   }
   document.body.style.overflow = '';
 }
@@ -1055,6 +1059,56 @@ function setupHelpModal() {
   
   if (helpModalOverlay) {
     helpModalOverlay.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+  }
+
+  // Changelog Modal
+  const changelogLink = document.getElementById('changelogLink');
+  const changelogModalOverlay = document.getElementById('changelogModalOverlay');
+  const changelogModalClose = document.getElementById('changelogModalClose');
+  const changelogContent = document.getElementById('changelogContent');
+
+  if (changelogLink) {
+    changelogLink.addEventListener('click', async () => {
+      changelogModalOverlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      try {
+        const res = await fetch('/changelog.json?t=' + new Date().getTime());
+        if (!res.ok) throw new Error('Failed to load changelog');
+        const commits = await res.json();
+        
+        if (commits.length === 0) {
+          changelogContent.innerHTML = '<p>No changelog entries found.</p>';
+          return;
+        }
+
+        let html = '<div class="changelog-list" style="display: flex; flex-direction: column; gap: 1rem;">';
+        commits.forEach(c => {
+          html += `
+            <div class="changelog-entry" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
+                <h3 style="color: var(--text-primary); font-size: 1rem; margin: 0;">${escapeHTML(c.subject)}</h3>
+                <span style="color: var(--text-muted); font-size: 0.75rem; font-family: var(--font-mono);">${escapeHTML(c.date)}</span>
+              </div>
+              ${c.body ? `<p style="margin-top: 0.5rem; margin-bottom: 0; font-size: 0.85rem; opacity: 0.8; white-space: pre-wrap;">${escapeHTML(c.body)}</p>` : ''}
+            </div>
+          `;
+        });
+        html += '</div>';
+        changelogContent.innerHTML = html;
+      } catch (err) {
+        changelogContent.innerHTML = '<p style="color: var(--accent-rose);">Failed to load changelog. Try again later.</p>';
+      }
+    });
+  }
+
+  if (changelogModalClose) {
+    changelogModalClose.addEventListener('click', closeModal);
+  }
+  
+  if (changelogModalOverlay) {
+    changelogModalOverlay.addEventListener('click', (e) => {
       if (e.target === e.currentTarget) closeModal();
     });
   }
