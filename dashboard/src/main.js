@@ -1003,21 +1003,27 @@ function setupEventListeners() {
 
 function setupAboutModal() {
   const aboutLink = document.getElementById('aboutLink');
+  const headerAboutBtn = document.getElementById('headerAboutBtn');
   const aboutModalOverlay = document.getElementById('aboutModalOverlay');
   const aboutModalClose = document.getElementById('aboutModalClose');
 
+  const openAboutModal = (e) => {
+    if (e) e.preventDefault();
+    aboutModalOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+
   if (aboutLink && aboutModalOverlay) {
-    aboutLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      aboutModalOverlay.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    });
+    aboutLink.addEventListener('click', openAboutModal);
   }
-  
+
+  if (headerAboutBtn && aboutModalOverlay) {
+    headerAboutBtn.addEventListener('click', openAboutModal);
+  }
+
   if (aboutModalClose) {
     aboutModalClose.addEventListener('click', closeModal);
-  }
-  
+  }  
   if (aboutModalOverlay) {
     aboutModalOverlay.addEventListener('click', (e) => {
       if (e.target === e.currentTarget) closeModal();
