@@ -921,24 +921,105 @@ function setupEventListeners() {
         }
         
         markStepDone('step-calculations');
-        if (progressTitle) {
-          progressTitle.textContent = 'Complete!';
-          progressTitle.style.color = 'var(--accent-green)';
-        }
 
-        setTimeout(() => { 
-          progressContainer.style.display = 'none'; 
-          adHocAddress.value = ''; 
-        }, 3000);
-      }
-    };
-    
+        if (payload.property && payload.property.comparableSales && payload.property.comparableSales.comps && payload.property.comparableSales.comps.length > 0) {
+          const comps = payload.property.comparableSales.comps;
+          const stepAutoComps = document.getElementById('step-auto-comps');
+          if (stepAutoComps) {
+            stepAutoComps.style.display = 'block';
+            markStepActive('step-auto-comps');
+          }
+
+          startCompScrapeQueue(comps, 0, () => {
+            if (stepAutoComps) markStepDone('step-auto-comps');
+            if (progressTitle) {
+              progressTitle.textContent = 'Complete!';
+              progressTitle.style.color = 'var(--accent-green)';
+            }
+            setTimeout(() => {
+              progressContainer.style.display = 'none';
+              adHocAddress.value = '';
+              if (stepAutoComps) stepAutoComps.style.display = 'none';
+            }, 3000);
+          });
+        } else {
+          if (progressTitle) {
+            progressTitle.textContent = 'Complete!';
+            progressTitle.style.color = 'var(--accent-green)';
+          }
+          setTimeout(() => {
+            progressContainer.style.display = 'none';
+            adHocAddress.value = '';
+          }, 3000);
+        }
+        }
+        };    
     eventSource.onerror = () => {
       markStepError('Connection error.');
       eventSource.close();
       adHocBtn.disabled = false;
       setTimeout(() => { progressContainer.style.display = 'none'; }, 5000);
     };
+  }
+
+  async function startCompScrapeQueue(comps, index, onComplete) {
+    if (index >= comps.length) {
+      if (onComplete) onComplete();
+      return;
+    }
+
+    const comp = comps[index];
+    const stepAutoComps = document.getElementById('step-auto-comps');
+    if (stepAutoComps) {
+      stepAutoComps.innerHTML = `<span class="step-icon"></span> Fetching Comp ${index + 1}/${comps.length}: ${escapeHTML(comp.address)}...`;
+    }
+
+    try {
+      // Step 1: Search to get PIN
+      const searchRes = await fetch(`/api/scrape/search?address=${encodeURIComponent(comp.address)}`);
+      const searchData = await searchRes.json();
+
+      if (!searchData.error && searchData.properties && searchData.properties.length > 0) {
+        const match = searchData.properties[0]; // Take best match
+        
+        // Ensure it's not already in our local dataset to avoid redundant scrapes
+        // (Though scraping it ensures we have the latest tax info)
+        const isAlreadyScraped = data.properties.some(p => p.pin === match.pin);
+        
+        if (!isAlreadyScraped) {
+          // Step 2: Hit stream API, but using fetch instead of EventSource since we just want it to finish
+          // Actually, we can use EventSource to await the 'complete' event, or just fetch the stream and read it
+          await new Promise((resolve) => {
+            const compEventSource = new EventSource(`/api/scrape/stream?pin=${match.pin}&address=${encodeURIComponent(match.address)}&owner=${encodeURIComponent(match.owner)}`);
+            compEventSource.onmessage = (event) => {
+              const payload = JSON.parse(event.data);
+              if (payload.complete || payload.error) {
+                compEventSource.close();
+                if (payload.property) {
+                  data.properties.push(payload.property);
+                  data.totalProperties = data.properties.length;
+                  const trendPropCount = document.getElementById('trendPropertyCount');
+                  if (trendPropCount) trendPropCount.textContent = data.totalProperties;
+                  populateSummaryCards();
+                  renderTrendChart();
+                  renderDistributionChart();
+                }
+                resolve();
+              }
+            };
+            compEventSource.onerror = () => {
+              compEventSource.close();
+              resolve();
+            };
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to auto-scrape comp:', comp.address, err);
+    }
+
+    // Process next comp
+    startCompScrapeQueue(comps, index + 1, onComplete);
   }
 
   // Search in table (only on properties page)
