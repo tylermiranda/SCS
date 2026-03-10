@@ -9,6 +9,7 @@ let detailChart = null;
 let detailBreakdownChart = null;
 let trendChartInstance = null;
 let distChartInstance = null;
+let mapInstance = null;
 
 // ---- Utilities ----
 
@@ -91,6 +92,7 @@ async function loadData() {
     populateSummaryCards();
     renderTrendChart();
     renderDistributionChart();
+    renderMap();
     renderPropertyTable();
     setupEventListeners();
   } catch (err) {
@@ -316,6 +318,78 @@ function renderDistributionChart() {
       },
     },
   });
+}
+
+function renderMap() {
+  const mapContainer = document.getElementById('propertyMap');
+  if (!mapContainer) return;
+
+  // Initialize map if it doesn't exist
+  if (!mapInstance) {
+    // Default to Sedgwick County, KS roughly
+    mapInstance = L.map('propertyMap').setView([37.6872, -97.3301], 10);
+    
+    // Add dark mode CartoDB map tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }).addTo(mapInstance);
+  }
+
+  // Clear existing markers
+  mapInstance.eachLayer((layer) => {
+    if (layer instanceof L.CircleMarker) {
+      mapInstance.removeLayer(layer);
+    }
+  });
+
+  const geoProperties = data.properties.filter(p => p.coordinates && p.coordinates.lat && p.coordinates.lng);
+  
+  if (geoProperties.length === 0) return;
+
+  const bounds = [];
+
+  geoProperties.forEach(p => {
+    const latest = getLatestAppraisal(p, 2026);
+    const prev = getLatestAppraisal(p, 2025);
+    
+    let changePct = 0;
+    if (latest && prev && prev.total > 0) {
+      changePct = ((latest.total - prev.total) / prev.total) * 100;
+    } else if (latest) {
+      changePct = parseChangeNum(latest.change);
+    }
+
+    // Determine color based on % increase
+    let color = '#2e7d32'; // Green (low/no increase)
+    if (changePct >= 20) color = '#d32f2f'; // Red (high increase)
+    else if (changePct >= 10) color = '#ff5500'; // Orange (medium increase)
+
+    const marker = L.circleMarker([p.coordinates.lat, p.coordinates.lng], {
+      radius: 6,
+      fillColor: color,
+      color: '#111',
+      weight: 1,
+      opacity: 1,
+      fillOpacity: 0.8
+    }).addTo(mapInstance);
+
+    const popupContent = `
+      <div style="font-family: var(--font-sans); color: #111;">
+        <strong style="display:block; margin-bottom: 4px;">${escapeHTML(cleanAddress(p.address))}</strong>
+        <div style="font-size: 0.85rem; margin-bottom: 2px;">Value (2026): ${latest ? formatCurrency(latest.total) : '—'}</div>
+        <div style="font-size: 0.85rem; font-weight: bold; color: ${color};">Change: +${changePct.toFixed(1)}%</div>
+      </div>
+    `;
+    
+    marker.bindPopup(popupContent);
+    bounds.push([p.coordinates.lat, p.coordinates.lng]);
+  });
+
+  if (bounds.length > 0) {
+    mapInstance.fitBounds(bounds, { padding: [20, 20], maxZoom: 16 });
+  }
 }
 
 // ---- Property Table ----
@@ -748,13 +822,13 @@ function setupEventListeners() {
   const closeNotificationBtn = document.getElementById('closeNotificationBtn');
   
   if (updateNotification && closeNotificationBtn) {
-    if (localStorage.getItem('hideUpdateAutoScrape') === 'true') {
+    if (localStorage.getItem('hideUpdateInteractiveMap') === 'true') {
       updateNotification.style.display = 'none';
     }
     
     closeNotificationBtn.addEventListener('click', () => {
       updateNotification.style.display = 'none';
-      localStorage.setItem('hideUpdateAutoScrape', 'true');
+      localStorage.setItem('hideUpdateInteractiveMap', 'true');
     });
   }
 
@@ -927,6 +1001,7 @@ function setupEventListeners() {
           populateSummaryCards();
           renderTrendChart();
           renderDistributionChart();
+          renderMap();
           
           // Re-render table if we are on properties.html
           renderPropertyTable(document.getElementById('searchInput')?.value || '');
@@ -1054,6 +1129,7 @@ function setupEventListeners() {
                   populateSummaryCards();
                   renderTrendChart();
                   renderDistributionChart();
+                  renderMap();
                 }
               }
             }

@@ -55,7 +55,11 @@
                 <input type="text" id="pinInput" placeholder="Enter Property PIN" style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--glass-border); background: var(--bg-elevated); color: var(--text-primary); outline: none;" />
                 <button id="loadBtn" class="btn btn-secondary">Load</button>
               </div>
-              <button id="saveBtn" class="btn" disabled>Save Changes</button>
+              <div style="display: flex; gap: 1rem; align-items: center;">
+                <span id="geocodeProgress" style="font-size: 0.85rem; color: var(--accent-amber); display: none;">Geocoding...</span>
+                <button id="geocodeBtn" class="btn btn-secondary" style="border-color: var(--accent-amber); color: var(--accent-amber);">Geocode Missing</button>
+                <button id="saveBtn" class="btn" disabled>Save Changes</button>
+              </div>
             </div>
           </div>
           
@@ -168,6 +172,83 @@
           this.selectionStart = this.selectionEnd = start + 2;
         }
       });
+
+      // Geocode Missing Properties Feature
+      const geocodeBtn = document.getElementById('geocodeBtn');
+      const geocodeProgress = document.getElementById('geocodeProgress');
+
+      if (geocodeBtn && geocodeProgress) {
+        geocodeBtn.addEventListener('click', async () => {
+          if (!confirm('This will find all properties without coordinates and attempt to geocode them via the US Census API. This may take several minutes. Continue?')) {
+            return;
+          }
+
+          geocodeBtn.disabled = true;
+          geocodeProgress.style.display = 'inline-block';
+          geocodeProgress.textContent = 'Fetching property list...';
+
+          try {
+            const res = await fetch('/api/admin/data?t=' + Date.now());
+            if (!res.ok) throw new Error('Failed to load data');
+            
+            const data = await res.json();
+            const properties = data.properties || [];
+            const needsGeocode = properties.filter(p => !p.coordinates || !p.coordinates.lat);
+
+            if (needsGeocode.length === 0) {
+              showToast('All properties are already geocoded!');
+              geocodeProgress.style.display = 'none';
+              geocodeBtn.disabled = false;
+              return;
+            }
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (let i = 0; i < needsGeocode.length; i++) {
+              const p = needsGeocode[i];
+              geocodeProgress.textContent = `Geocoding ${i + 1} of ${needsGeocode.length}...`;
+              
+              try {
+                const geoUrl = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(p.address + ', KS')}&benchmark=2020&format=json`;
+                const geoRes = await fetch(geoUrl);
+                
+                if (geoRes.ok) {
+                  const geoData = await geoRes.json();
+                  if (geoData.result && geoData.result.addressMatches && geoData.result.addressMatches.length > 0) {
+                    const coords = geoData.result.addressMatches[0].coordinates;
+                    p.coordinates = { lat: coords.y, lng: coords.x };
+                    
+                    // Save back to DB
+                    await fetch('/api/admin/data', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ property: p })
+                    });
+                    successCount++;
+                  } else {
+                    failCount++;
+                  }
+                } else {
+                  failCount++;
+                }
+              } catch (e) {
+                failCount++;
+              }
+              
+              // Small pause to avoid hitting rate limits
+              await new Promise(r => setTimeout(r, 200));
+            }
+            
+            showToast(`Geocoding complete! Success: ${successCount}, Failed: ${failCount}`);
+          } catch (err) {
+            showToast(err.message, 'error');
+          } finally {
+            geocodeProgress.style.display = 'none';
+            geocodeBtn.disabled = false;
+          }
+        });
+      }
     </script>
   </body>
 </html>

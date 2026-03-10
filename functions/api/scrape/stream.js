@@ -48,10 +48,24 @@ export async function onRequest(context) {
 `));
       const comparableSales = await scrapeComparableSales(pin);
 
-      await writer.write(encoder.encode(`data: ${JSON.stringify({ status: `Fetching tax records for ${address}...` })}
-
-`));
+      await writer.write(encoder.encode(`data: ${JSON.stringify({ status: `Fetching tax records for ${address}...` })}\n\n`));
       const taxBill = await scrapeTaxBill(pin);
+
+      await writer.write(encoder.encode(`data: ${JSON.stringify({ status: `Geocoding address...` })}\n\n`));
+      let coordinates = null;
+      try {
+        const geoUrl = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(address + ', KS')}&benchmark=2020&format=json`;
+        const geoRes = await fetch(geoUrl);
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData.result && geoData.result.addressMatches && geoData.result.addressMatches.length > 0) {
+            const coords = geoData.result.addressMatches[0].coordinates;
+            coordinates = { lat: coords.y, lng: coords.x };
+          }
+        }
+      } catch (e) {
+        console.warn('Geocoding failed for', address, e);
+      }
 
       const property = {
         pin,
@@ -60,7 +74,8 @@ export async function onRequest(context) {
         appraisals: values.appraisals,
         assessments: values.assessments,
         taxBill,
-        comparableSales
+        comparableSales,
+        coordinates
       };
       
       // Save to D1
