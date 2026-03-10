@@ -822,13 +822,13 @@ function setupEventListeners() {
   const closeNotificationBtn = document.getElementById('closeNotificationBtn');
   
   if (updateNotification && closeNotificationBtn) {
-    if (localStorage.getItem('hideUpdateAutoScrape') === 'true') {
+    if (localStorage.getItem('hideUpdateInteractiveMap') === 'true') {
       updateNotification.style.display = 'none';
     }
     
     closeNotificationBtn.addEventListener('click', () => {
       updateNotification.style.display = 'none';
-      localStorage.setItem('hideUpdateAutoScrape', 'true');
+      localStorage.setItem('hideUpdateInteractiveMap', 'true');
     });
   }
 
