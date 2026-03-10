@@ -664,6 +664,9 @@ function renderPropertyDetails(pin) {
             <span class="comp-stat-label">Comparables Used</span>
           </div>
         </div>
+        <div id="compScrapeProgress" style="margin-top: 1rem; padding: 0.75rem; background: rgba(45, 212, 191, 0.1); border: 1px solid rgba(45, 212, 191, 0.3); border-radius: 4px; color: var(--accent-green); font-size: 0.85rem; text-align: center; display: none;">
+          Auto-importing comparable histories...
+        </div>
       `;
 
       compBody.innerHTML = cs.comps.map(c => `
@@ -740,6 +743,21 @@ function closeModal() {
 // ---- Event Listeners ----
 
 function setupEventListeners() {
+  // Update Notification Dismissal
+  const updateNotification = document.getElementById('updateNotification');
+  const closeNotificationBtn = document.getElementById('closeNotificationBtn');
+  
+  if (updateNotification && closeNotificationBtn) {
+    if (localStorage.getItem('hideUpdateAutoScrape') === 'true') {
+      updateNotification.style.display = 'none';
+    }
+    
+    closeNotificationBtn.addEventListener('click', () => {
+      updateNotification.style.display = 'none';
+      localStorage.setItem('hideUpdateAutoScrape', 'true');
+    });
+  }
+
   // Ad-hoc scrape (only on homepage)
   const adHocBtn = document.getElementById('adHocBtn');
   const adHocAddress = document.getElementById('adHocAddress');
@@ -921,24 +939,135 @@ function setupEventListeners() {
         }
         
         markStepDone('step-calculations');
-        if (progressTitle) {
-          progressTitle.textContent = 'Complete!';
-          progressTitle.style.color = 'var(--accent-green)';
-        }
 
-        setTimeout(() => { 
-          progressContainer.style.display = 'none'; 
-          adHocAddress.value = ''; 
-        }, 3000);
-      }
-    };
-    
+        if (payload.property && payload.property.comparableSales && payload.property.comparableSales.comps && payload.property.comparableSales.comps.length > 0) {
+          const comps = payload.property.comparableSales.comps;
+          const stepAutoComps = document.getElementById('step-auto-comps');
+          if (stepAutoComps) {
+            stepAutoComps.style.display = 'block';
+            markStepActive('step-auto-comps');
+          }
+
+          startCompScrapeQueue(comps, 0, () => {
+            if (stepAutoComps) markStepDone('step-auto-comps');
+            if (progressTitle) {
+              progressTitle.textContent = 'Complete!';
+              progressTitle.style.color = 'var(--accent-green)';
+            }
+            setTimeout(() => {
+              progressContainer.style.display = 'none';
+              adHocAddress.value = '';
+              if (stepAutoComps) stepAutoComps.style.display = 'none';
+            }, 3000);
+          });
+        } else {
+          if (progressTitle) {
+            progressTitle.textContent = 'Complete!';
+            progressTitle.style.color = 'var(--accent-green)';
+          }
+          setTimeout(() => {
+            progressContainer.style.display = 'none';
+            adHocAddress.value = '';
+          }, 3000);
+        }
+        }
+        };    
     eventSource.onerror = () => {
       markStepError('Connection error.');
       eventSource.close();
       adHocBtn.disabled = false;
       setTimeout(() => { progressContainer.style.display = 'none'; }, 5000);
     };
+  }
+
+  async function startCompScrapeQueue(comps, index, onComplete) {
+    const compScrapeProgress = document.getElementById('compScrapeProgress');
+    
+    if (index >= comps.length) {
+      if (compScrapeProgress) {
+        compScrapeProgress.textContent = 'All comparables imported successfully.';
+        setTimeout(() => { compScrapeProgress.style.display = 'none'; }, 3000);
+      }
+      if (onComplete) onComplete();
+      return;
+    }
+
+    const comp = comps[index];
+    const stepAutoComps = document.getElementById('step-auto-comps');
+    if (stepAutoComps) {
+      stepAutoComps.innerHTML = `<span class="step-icon"></span> Fetching Comp ${index + 1}/${comps.length}: ${escapeHTML(comp.address)}...`;
+    }
+    if (compScrapeProgress) {
+      compScrapeProgress.style.display = 'block';
+      compScrapeProgress.innerHTML = `<div class="spinner" style="width: 12px; height: 12px; border-width: 2px; display: inline-block; vertical-align: middle; margin-right: 8px;"></div> Importing Comparable ${index + 1} of ${comps.length}...`;
+    }
+
+    try {
+      // Step 1: Search to get PIN
+      let searchAddress = comp.address;
+      let searchRes = await fetch(`/api/scrape/search?address=${encodeURIComponent(searchAddress)}`);
+      let searchData = await searchRes.json();
+
+      // Fallback: The county PDF often appends the city name to the address, which breaks their own search
+      if ((!searchData.properties || searchData.properties.length === 0) && searchAddress.includes(' ')) {
+        const parts = searchAddress.trim().split(' ');
+        parts.pop(); // Remove last word (e.g. MULVANE)
+        searchAddress = parts.join(' ');
+        searchRes = await fetch(`/api/scrape/search?address=${encodeURIComponent(searchAddress)}`);
+        searchData = await searchRes.json();
+      }
+
+      // Fallback 2: Handle two-word cities (e.g. VALLEY CENTER)
+      if ((!searchData.properties || searchData.properties.length === 0) && searchAddress.includes(' ')) {
+        const parts = searchAddress.trim().split(' ');
+        parts.pop(); 
+        searchAddress = parts.join(' ');
+        searchRes = await fetch(`/api/scrape/search?address=${encodeURIComponent(searchAddress)}`);
+        searchData = await searchRes.json();
+      }
+
+      if (!searchData.error && searchData.properties && searchData.properties.length > 0) {
+        const match = searchData.properties[0]; // Take best match
+        
+        // Ensure it's not already in our local dataset to avoid redundant scrapes
+        const isAlreadyScraped = data.properties.some(p => p.pin === match.pin);
+        
+        if (!isAlreadyScraped) {
+          // Step 2: Hit stream API using standard fetch and wait for it to finish
+          const streamUrl = `/api/scrape/stream?pin=${match.pin}&address=${encodeURIComponent(match.address)}&owner=${encodeURIComponent(match.owner)}`;
+          const scrapeRes = await fetch(streamUrl);
+          
+          // Read the SSE response to completion so the server doesn't throw a broken pipe
+          const text = await scrapeRes.text();
+          
+          // Try to extract the final complete payload to update our UI
+          try {
+            const lines = text.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const payload = JSON.parse(line.substring(6));
+                if (payload.complete && payload.property) {
+                  data.properties.push(payload.property);
+                  data.totalProperties = data.properties.length;
+                  const trendPropCount = document.getElementById('trendPropertyCount');
+                  if (trendPropCount) trendPropCount.textContent = data.totalProperties;
+                  populateSummaryCards();
+                  renderTrendChart();
+                  renderDistributionChart();
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to parse comp scrape result:', e);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to auto-scrape comp:', comp.address, err);
+    }
+
+    // Process next comp
+    startCompScrapeQueue(comps, index + 1, onComplete);
   }
 
   // Search in table (only on properties page)
