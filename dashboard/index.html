@@ -352,9 +352,30 @@
       <!-- Geospatial Map -->
       <section class="chart-section glass" id="mapSection">
         <h2>Geospatial Tax Heatmap</h2>
-        <p class="chart-subtitle">
+        <p class="chart-subtitle" style="margin-bottom: 0.5rem;">
           Interactive map of indexed properties with geographical coordinates. Color-coded by YoY tax percentage increase.
         </p>
+        
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 1rem;">
+          <div style="display: flex; gap: 1rem; font-size: 0.85rem; font-family: var(--font-mono); color: var(--text-secondary);">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: #2e7d32; border: 1px solid #111;"></div>
+              <span>&lt; 10% Increase</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: #ff5500; border: 1px solid #111;"></div>
+              <span>10% - 19% Increase</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: #d32f2f; border: 1px solid #111;"></div>
+              <span>20%+ Increase</span>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">
+            * Not all properties may appear. Map requires exact US Census coordinate match.
+          </div>
+        </div>
+
         <div id="propertyMap" style="height: 500px; width: 100%; border-radius: 8px; border: 1px solid var(--glass-border); z-index: 1;"></div>
       </section>
     </main>
@@ -413,6 +434,7 @@
         <div style="color: var(--text-secondary); line-height: 1.6; font-size: var(--text-sm);">
           <p style="margin-bottom: 1rem;">I built this tool as a way to visualize increases (and the rare decreases) in property appraisal values. I was quite shocked to see my own property increase by 20% this past year.</p>
           <p style="margin-bottom: 1rem;">All the information here is gathered from public information on the <a href="https://ssc.sedgwickcounty.org/propertytax/" target="_blank" rel="noopener" style="color: var(--accent-teal);">Sedgwick County website</a>. There is no proprietary or private information contained here.</p>
+          <p style="margin-bottom: 1rem;">Map geocoding coordinates are sourced via the public <a href="https://geocoding.geo.census.gov/" target="_blank" rel="noopener" style="color: var(--accent-teal);">US Census Bureau Geocoding Services API</a>.</p>
           <p style="margin-bottom: 1rem;">I built this on my own free time and decided to make it free for the community. That being said, it is running on a free tier in Cloudflare.</p>
           <p style="margin-bottom: 1.5rem;">I have open-sourced the code for it in case anyone wants to build their own version. You can find the source code here: <br><a href="https://github.com/tylermiranda/SCS" target="_blank" rel="noopener" style="color: var(--accent-teal); word-break: break-all;">https://github.com/tylermiranda/SCS</a></p>
           
