@@ -362,9 +362,10 @@ function renderMap() {
     }
 
     // Determine color based on % increase
-    let color = '#2e7d32'; // Green (low/no increase)
-    if (changePct >= 20) color = '#d32f2f'; // Red (high increase)
-    else if (changePct >= 10) color = '#ff5500'; // Orange (medium increase)
+    let color = '#2e7d32'; // Green (Negative or 0)
+    if (changePct >= 20) color = '#d32f2f'; // Red (20%+)
+    else if (changePct >= 10) color = '#ff5500'; // Orange (10-19%)
+    else if (changePct > 0) color = '#facc15'; // Yellow (1-9%)
 
     const marker = L.circleMarker([p.coordinates.lat, p.coordinates.lng], {
       radius: 6,
