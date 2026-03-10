@@ -330,13 +330,20 @@ function renderNeighborhoodMap(targetProperty) {
     return;
   }
 
+  // Helper to ensure we don't accidentally center on a bad geocode outside of Kansas
+  const isKansasCoord = (coords) => {
+    if (!coords || !coords.lat || !coords.lng) return false;
+    return coords.lat > 36.9 && coords.lat < 40.1 && coords.lng > -102.1 && coords.lng < -94.5;
+  };
+
   let centerCoords = targetProperty.coordinates;
+  if (!isKansasCoord(centerCoords)) centerCoords = null;
 
   // Fallback 1: Use a comparable property's coordinates
   if (!centerCoords && targetProperty.comparableSales && targetProperty.comparableSales.comps) {
     for (const comp of targetProperty.comparableSales.comps) {
       const fullComp = data.properties.find(p => p.address === comp.address);
-      if (fullComp && fullComp.coordinates && fullComp.coordinates.lat) {
+      if (fullComp && isKansasCoord(fullComp.coordinates)) {
         centerCoords = fullComp.coordinates;
         break;
       }
@@ -348,7 +355,7 @@ function renderNeighborhoodMap(targetProperty) {
     const parts = targetProperty.address.trim().split(' ');
     if (parts.length > 0) {
       const city = parts[parts.length - 1]; // e.g. MULVANE
-      const cityProp = data.properties.find(p => p.address.endsWith(city) && p.coordinates && p.coordinates.lat);
+      const cityProp = data.properties.find(p => p.address.endsWith(city) && isKansasCoord(p.coordinates));
       if (cityProp) {
         centerCoords = cityProp.coordinates;
       }
