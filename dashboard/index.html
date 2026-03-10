@@ -48,13 +48,10 @@
           <div style="width: 100%; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: 0.25rem;">
             * Statistics reflect only the properties currently searched and saved to this dashboard. The dataset grows automatically as users search.
           </div>
-          <div class="header-stat glass" title="Total number of properties currently in the database. We automatically index up to 5 comparables per search, growing the database 6x faster!">
+          <div class="header-stat glass" title="Total number of properties currently in the database.">
             <span class="stat-icon">📚</span>
             <div class="stat-content">
-              <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <span class="stat-val" id="totalIndexed">—</span>
-                <span class="stat-badge" title="Automatically indexing comparables for 6x faster growth!">⚡️ Auto-Indexing</span>
-              </div>
+              <span class="stat-val" id="totalIndexed">—</span>
               <span class="stat-lbl">Properties Indexed</span>
             </div>
           </div>
@@ -105,6 +102,17 @@
     </header>
 
     <main>
+      <!-- Update Notification Banner -->
+      <div id="updateNotification" class="update-notification glass" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border-radius: 8px; border-left: 4px solid var(--accent-green); display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <strong style="color: var(--accent-green); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">✨ New Feature</strong>
+          <span style="color: var(--text-primary); font-size: 0.95rem;"><strong>Turbo Growth:</strong> When you search for a property, the system now automatically fetches its 5 comparable sales in the background. The dataset is now growing 6x faster!</span>
+        </div>
+        <button id="closeNotificationBtn" class="btn btn-secondary" style="padding: 0.4rem; min-width: auto; background: transparent; border: none; color: var(--text-muted);" title="Dismiss">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
       <!-- Search Section -->
       <section class="search-section glass search-highlight" style="margin-bottom: 2rem; padding: 1.5rem; border-radius: 12px; text-align: center; position: relative; z-index: 10;">
         <h2>Search for a Property</h2>

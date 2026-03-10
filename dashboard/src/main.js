@@ -743,6 +743,21 @@ function closeModal() {
 // ---- Event Listeners ----
 
 function setupEventListeners() {
+  // Update Notification Dismissal
+  const updateNotification = document.getElementById('updateNotification');
+  const closeNotificationBtn = document.getElementById('closeNotificationBtn');
+  
+  if (updateNotification && closeNotificationBtn) {
+    if (localStorage.getItem('hideUpdateAutoScrape') === 'true') {
+      updateNotification.style.display = 'none';
+    }
+    
+    closeNotificationBtn.addEventListener('click', () => {
+      updateNotification.style.display = 'none';
+      localStorage.setItem('hideUpdateAutoScrape', 'true');
+    });
+  }
+
   // Ad-hoc scrape (only on homepage)
   const adHocBtn = document.getElementById('adHocBtn');
   const adHocAddress = document.getElementById('adHocAddress');

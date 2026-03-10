@@ -1209,20 +1209,3 @@ body.has-active-property #searchedPropertyDetails {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
-.stat-badge {
-  background: rgba(45, 212, 191, 0.15);
-  color: var(--accent-green);
-  border: 1px solid rgba(45, 212, 191, 0.3);
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  cursor: help;
-}
