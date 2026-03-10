@@ -930,6 +930,8 @@ function renderPropertyDetails(pin) {
     document.body.classList.add('has-active-property');
     inlineDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  renderNeighborhoodMap(property);
 }
 
 function clearActiveProperty() {
