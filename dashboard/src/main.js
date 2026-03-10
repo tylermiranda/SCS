@@ -333,7 +333,8 @@ function renderNeighborhoodMap(targetProperty) {
   // Helper to ensure we don't accidentally center on a bad geocode outside of Kansas
   const isKansasCoord = (coords) => {
     if (!coords || !coords.lat || !coords.lng) return false;
-    return coords.lat > 36.9 && coords.lat < 40.1 && coords.lng > -102.1 && coords.lng < -94.5;
+    // Tighten bounds to Sedgwick County specifically instead of all of Kansas
+    return coords.lat > 37.4 && coords.lat < 38.0 && coords.lng > -97.8 && coords.lng < -97.1;
   };
 
   let centerCoords = targetProperty.coordinates;
