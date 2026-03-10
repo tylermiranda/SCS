@@ -16,6 +16,8 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
@@ -345,6 +347,15 @@
         <div class="chart-container">
           <canvas id="distributionChart"></canvas>
         </div>
+      </section>
+
+      <!-- Geospatial Map -->
+      <section class="chart-section glass" id="mapSection">
+        <h2>Geospatial Tax Heatmap</h2>
+        <p class="chart-subtitle">
+          Interactive map of indexed properties with geographical coordinates. Color-coded by YoY tax percentage increase.
+        </p>
+        <div id="propertyMap" style="height: 500px; width: 100%; border-radius: 8px; border: 1px solid var(--glass-border); z-index: 1;"></div>
       </section>
     </main>
 
