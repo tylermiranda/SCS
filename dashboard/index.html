@@ -108,7 +108,7 @@
       <div id="updateNotification" class="update-notification glass" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border-radius: 8px; border-left: 4px solid var(--accent-green); display: flex; justify-content: space-between; align-items: center;">
         <div>
           <strong style="color: var(--accent-green); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">✨ New Feature</strong>
-          <span style="color: var(--text-primary); font-size: 0.95rem;"><strong>Interactive Map & Turbo Growth:</strong> Check out the new Geospatial Tax Heatmap below! Plus, when you search for a property, the system now automatically fetches its 5 comparable sales in the background. The dataset is now growing 6x faster!</span>
+          <span style="color: var(--text-primary); font-size: 0.95rem;"><strong>Interactive Maps & Turbo Growth:</strong> When you search for a property, you'll now see a localized Neighborhood Map plotting the target home against nearby comparables, plus a county-wide Geospatial Tax Heatmap at the bottom of the page! The system also automatically fetches 5 comparable sales in the background, growing the dataset 6x faster!</span>
         </div>
         <button id="closeNotificationBtn" class="btn btn-secondary" style="padding: 0.4rem; min-width: auto; background: transparent; border: none; color: var(--text-muted);" title="Dismiss">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -313,6 +313,34 @@
               <tbody id="compSalesBody"></tbody>
             </table>
           </div>
+        </div>
+
+        <div id="neighborhoodMapSection" style="margin-top: 2rem; display: none;">
+          <h3 style="margin-bottom: 0.25rem;">Neighborhood Map</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; font-style: italic;">We make a best-effort attempt to geocode locations via free public APIs (doing this keeps the site free to use, google maps isn't free for this type of project!). If an exact match isn't found, the map may center on a nearby comparable property or the street center.</p>
+          <div style="display: flex; gap: 1rem; font-size: 0.85rem; font-family: var(--font-mono); color: var(--text-secondary); margin-bottom: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: #3b82f6; border: 1px solid #111;"></div>
+              <span>Target Property</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: #2e7d32; border: 1px solid #111;"></div>
+              <span>Negative</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: #facc15; border: 1px solid #111;"></div>
+              <span>0% - 9%</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: #ff5500; border: 1px solid #111;"></div>
+              <span>10% - 19%</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <div style="width: 12px; height: 12px; border-radius: 50%; background: #d32f2f; border: 1px solid #111;"></div>
+              <span>20%+</span>
+            </div>
+          </div>
+          <div id="neighborhoodMap" style="height: 400px; width: 100%; border-radius: 8px; border: 1px solid var(--glass-border); z-index: 1;"></div>
         </div>
 
         <div class="print-tips" style="display: none; padding: 2rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-top: 2rem; background: var(--glass-bg);">

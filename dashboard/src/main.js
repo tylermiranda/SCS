@@ -10,6 +10,7 @@ let detailBreakdownChart = null;
 let trendChartInstance = null;
 let distChartInstance = null;
 let mapInstance = null;
+let detailMapInstance = null;
 
 // ---- Utilities ----
 
@@ -318,6 +319,157 @@ function renderDistributionChart() {
       },
     },
   });
+}
+
+function renderNeighborhoodMap(targetProperty) {
+  const mapSection = document.getElementById('neighborhoodMapSection');
+  const mapContainer = document.getElementById('neighborhoodMap');
+  
+  if (!mapSection || !mapContainer || !targetProperty) {
+    if (mapSection) mapSection.style.display = 'none';
+    return;
+  }
+
+  // Helper to ensure we don't accidentally center on a bad geocode outside of Kansas
+  const isKansasCoord = (coords) => {
+    if (!coords || !coords.lat || !coords.lng) return false;
+    // Tighten bounds to Sedgwick County specifically instead of all of Kansas
+    return coords.lat > 37.4 && coords.lat < 38.0 && coords.lng > -97.8 && coords.lng < -97.1;
+  };
+
+  let centerCoords = targetProperty.coordinates;
+  if (!isKansasCoord(centerCoords)) centerCoords = null;
+
+  // Fallback 1: Use a comparable property's coordinates
+  if (!centerCoords && targetProperty.comparableSales && targetProperty.comparableSales.comps) {
+    for (const comp of targetProperty.comparableSales.comps) {
+      const fullComp = data.properties.find(p => p.address === comp.address);
+      if (fullComp && isKansasCoord(fullComp.coordinates)) {
+        centerCoords = fullComp.coordinates;
+        break;
+      }
+    }
+  }
+
+  // Fallback 2: Use any property in the same city
+  if (!centerCoords) {
+    const parts = targetProperty.address.trim().split(' ');
+    if (parts.length > 0) {
+      const city = parts[parts.length - 1]; // e.g. MULVANE
+      const cityProp = data.properties.find(p => p.address.endsWith(city) && isKansasCoord(p.coordinates));
+      if (cityProp) {
+        centerCoords = cityProp.coordinates;
+      }
+    }
+  }
+
+  if (!centerCoords || !centerCoords.lat) {
+    mapSection.style.display = 'none';
+    return;
+  }
+
+  mapSection.style.display = 'block';
+
+  // Initialize map if it doesn't exist
+  if (!detailMapInstance) {
+    detailMapInstance = L.map('neighborhoodMap');
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }).addTo(detailMapInstance);
+  }
+
+  // Clear existing markers
+  detailMapInstance.eachLayer((layer) => {
+    if (layer instanceof L.CircleMarker) {
+      detailMapInstance.removeLayer(layer);
+    }
+  });
+
+  // Calculate distance between two coordinates in km
+  function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+      Math.sin(dLon / 2) * Math.sin(dLon / 2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+    return R * c; 
+  }
+
+  // Find nearby properties (e.g. within 2km)
+  const nearbyProperties = data.properties.filter(p => {
+    if (!p.coordinates || !p.coordinates.lat) return false;
+    const dist = getDistanceFromLatLonInKm(centerCoords.lat, centerCoords.lng, p.coordinates.lat, p.coordinates.lng);
+    return dist <= 2;
+  });
+
+  // Sort so the target property is rendered last (on top of others)
+  nearbyProperties.sort((a, b) => {
+    if (a.pin === targetProperty.pin) return 1;
+    if (b.pin === targetProperty.pin) return -1;
+    return 0;
+  });
+
+  const bounds = [];
+
+  // Plot nearby properties
+  nearbyProperties.forEach(p => {
+    const isTarget = p.pin === targetProperty.pin;
+    
+    let color = '#3b82f6'; // Blue for target property
+    let radius = isTarget ? 8 : 6;
+    let weight = isTarget ? 2 : 1;
+    let opacity = isTarget ? 1 : 0.8;
+
+    const latest = getLatestAppraisal(p, 2026);
+    const prev = getLatestAppraisal(p, 2025);
+    
+    let changePct = 0;
+    if (latest && prev && prev.total > 0) {
+      changePct = ((latest.total - prev.total) / prev.total) * 100;
+    } else if (latest) {
+      changePct = parseChangeNum(latest.change);
+    }
+
+    if (!isTarget) {
+      color = '#2e7d32'; // Green (Negative or 0)
+      if (changePct >= 20) color = '#d32f2f'; // Red (20%+)
+      else if (changePct >= 10) color = '#ff5500'; // Orange (10-19%)
+      else if (changePct > 0) color = '#facc15'; // Yellow (1-9%)
+    }
+
+    const marker = L.circleMarker([p.coordinates.lat, p.coordinates.lng], {
+      radius: radius,
+      fillColor: color,
+      color: isTarget ? '#fff' : '#111',
+      weight: weight,
+      opacity: 1,
+      fillOpacity: opacity
+    }).addTo(detailMapInstance);
+
+    const popupContent = `
+      <div style="font-family: var(--font-sans); color: #111;">
+        <strong style="display:block; margin-bottom: 4px;">${escapeHTML(cleanAddress(p.address))}</strong>
+        <div style="font-size: 0.85rem; margin-bottom: 2px;">Value (2026): ${latest ? formatCurrency(latest.total) : '—'}</div>
+        <div style="font-size: 0.85rem; font-weight: bold; color: ${isTarget ? '#111' : color};">Change: +${changePct.toFixed(1)}%</div>
+      </div>
+    `;
+    
+    marker.bindPopup(popupContent);
+    bounds.push([p.coordinates.lat, p.coordinates.lng]);
+  });
+
+  // Small delay to ensure the container is visible before invalidating size
+  setTimeout(() => {
+    detailMapInstance.invalidateSize();
+    
+    // Set view specifically on the target property
+    detailMapInstance.setView([centerCoords.lat, centerCoords.lng], 16);
+  }, 100);
 }
 
 function renderMap() {
@@ -779,6 +931,8 @@ function renderPropertyDetails(pin) {
     document.body.classList.add('has-active-property');
     inlineDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  renderNeighborhoodMap(property);
 }
 
 function clearActiveProperty() {
@@ -823,16 +977,15 @@ function setupEventListeners() {
   const closeNotificationBtn = document.getElementById('closeNotificationBtn');
   
   if (updateNotification && closeNotificationBtn) {
-    if (localStorage.getItem('hideUpdateInteractiveMap') === 'true') {
+    if (localStorage.getItem('hideUpdateNeighborhoodMap') === 'true') {
       updateNotification.style.display = 'none';
     }
-    
+
     closeNotificationBtn.addEventListener('click', () => {
       updateNotification.style.display = 'none';
-      localStorage.setItem('hideUpdateInteractiveMap', 'true');
+      localStorage.setItem('hideUpdateNeighborhoodMap', 'true');
     });
   }
-
   // Ad-hoc scrape (only on homepage)
   const adHocBtn = document.getElementById('adHocBtn');
   const adHocAddress = document.getElementById('adHocAddress');
@@ -960,7 +1113,7 @@ function setupEventListeners() {
     resetProgressSteps();
     markStepActive('step-disclaimer');
 
-    const eventSource = new EventSource(`/api/scrape/stream?pin=${pin}&address=${encodeURIComponent(address)}&owner=${encodeURIComponent(owner)}`);
+    const eventSource = new EventSource(`/api/scrape/stream?pin=${pin}&address=${encodeURIComponent(address)}&owner=${encodeURIComponent(owner)}&t=${Date.now()}`);
 
     eventSource.onmessage = (event) => {
       const payload = JSON.parse(event.data);
@@ -1010,6 +1163,7 @@ function setupEventListeners() {
           try {
             renderPropertyDetails(payload.property.pin);
           } catch (error) {
+            console.error(error);
             alert("Error rendering property details: " + error.message);
           }
         }
@@ -1110,7 +1264,7 @@ function setupEventListeners() {
         
         if (!isAlreadyScraped) {
           // Step 2: Hit stream API using standard fetch and wait for it to finish
-          const streamUrl = `/api/scrape/stream?pin=${match.pin}&address=${encodeURIComponent(match.address)}&owner=${encodeURIComponent(match.owner)}`;
+          const streamUrl = `/api/scrape/stream?pin=${match.pin}&address=${encodeURIComponent(match.address)}&owner=${encodeURIComponent(match.owner)}&t=${Date.now()}`;
           const scrapeRes = await fetch(streamUrl);
           
           // Read the SSE response to completion so the server doesn't throw a broken pipe

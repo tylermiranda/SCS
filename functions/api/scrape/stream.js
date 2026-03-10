@@ -52,19 +52,83 @@ export async function onRequest(context) {
       const taxBill = await scrapeTaxBill(pin);
 
       await writer.write(encoder.encode(`data: ${JSON.stringify({ status: `Geocoding address...` })}\n\n`));
-      let coordinates = null;
+      
+      // Check if we already have coordinates in DB so we don't overwrite manual/fallback ones
+      let existingCoords = null;
       try {
-        const geoUrl = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(address + ', KS')}&benchmark=2020&format=json`;
-        const geoRes = await fetch(geoUrl);
-        if (geoRes.ok) {
-          const geoData = await geoRes.json();
-          if (geoData.result && geoData.result.addressMatches && geoData.result.addressMatches.length > 0) {
-            const coords = geoData.result.addressMatches[0].coordinates;
-            coordinates = { lat: coords.y, lng: coords.x };
-          }
+        const existing = await env.DB.prepare('SELECT data FROM properties WHERE pin = ?').bind(pin).first();
+        if (existing && existing.data) {
+          const parsed = JSON.parse(existing.data);
+          if (parsed.coordinates) existingCoords = parsed.coordinates;
         }
       } catch (e) {
-        console.warn('Geocoding failed for', address, e);
+        console.warn('Failed to check existing coords', e);
+      }
+
+      let coordinates = existingCoords;
+
+      if (!coordinates) {
+        try {
+          const geoUrl = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(address + ', KS')}&benchmark=2020&format=json`;
+          const geoRes = await fetch(geoUrl);
+          if (geoRes.ok) {
+            const geoData = await geoRes.json();
+            if (geoData.result && geoData.result.addressMatches && geoData.result.addressMatches.length > 0) {
+              const coords = geoData.result.addressMatches[0].coordinates;
+              coordinates = { lat: coords.y, lng: coords.x };
+            }
+          }
+        } catch (e) {
+          console.warn('US Census Geocoding failed for', address, e);
+        }
+      }
+
+      // Fallback to OpenStreetMap if Census fails
+      if (!coordinates) {
+        try {
+          // Strip city name from the main address string but keep it for the query
+          const parts = address.split(' ');
+          let searchAddress = address;
+          let city = '';
+          if (parts.length > 2 && ['MULVANE', 'WICHITA', 'DERBY', 'HAYSVILLE', 'GODDARD', 'MAIZE', 'ANDALE', 'CHENEY', 'CLEARWATER', 'COLWICH', 'GARDEN', 'PLAIN', 'MOUNT', 'HOPE', 'PARK', 'VALLEY', 'CENTER', 'BEL', 'AIRE'].includes(parts[parts.length - 1].toUpperCase())) {
+            city = parts[parts.length - 1];
+            searchAddress = parts.slice(0, -1).join(' ');
+          }
+
+          const citySuffix = city ? `, ${city}, Sedgwick County, KS` : `, Sedgwick County, KS`;
+          let osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress + citySuffix)}`;
+          let osmRes = await fetch(osmUrl, {
+            headers: { 'User-Agent': 'SedgwickCountyTaxScraper/1.0' }
+          });
+          
+          let osmData = [];
+          if (osmRes.ok) {
+            const rawData = await osmRes.json();
+            // Force filter to Kansas to prevent OSM returning weird matches from other states
+            osmData = rawData.filter(d => d.display_name && d.display_name.includes('Kansas'));
+          }
+
+          // Secondary Fallback: Strip house number and search just the street and city
+          if ((!osmData || osmData.length === 0) && parts.length > 2) {
+            // Remove the first part (the house number)
+            const streetOnlyParts = searchAddress.split(' ').slice(1);
+            const streetOnly = streetOnlyParts.join(' ');
+            osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(streetOnly + citySuffix)}`;
+            osmRes = await fetch(osmUrl, {
+              headers: { 'User-Agent': 'SedgwickCountyTaxScraper/1.0' }
+            });
+            if (osmRes.ok) {
+              const rawData = await osmRes.json();
+              osmData = rawData.filter(d => d.display_name && d.display_name.includes('Kansas'));
+            }
+          }
+
+          if (osmData && osmData.length > 0) {
+            coordinates = { lat: parseFloat(osmData[0].lat), lng: parseFloat(osmData[0].lon) };
+          }
+        } catch (e) {
+          console.warn('OSM Geocoding fallback failed for', address, e);
+        }
       }
 
       const property = {
