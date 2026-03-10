@@ -664,6 +664,9 @@ function renderPropertyDetails(pin) {
             <span class="comp-stat-label">Comparables Used</span>
           </div>
         </div>
+        <div id="compScrapeProgress" style="margin-top: 1rem; padding: 0.75rem; background: rgba(45, 212, 191, 0.1); border: 1px solid rgba(45, 212, 191, 0.3); border-radius: 4px; color: var(--accent-green); font-size: 0.85rem; text-align: center; display: none;">
+          Auto-importing comparable histories...
+        </div>
       `;
 
       compBody.innerHTML = cs.comps.map(c => `
@@ -963,7 +966,13 @@ function setupEventListeners() {
   }
 
   async function startCompScrapeQueue(comps, index, onComplete) {
+    const compScrapeProgress = document.getElementById('compScrapeProgress');
+    
     if (index >= comps.length) {
+      if (compScrapeProgress) {
+        compScrapeProgress.textContent = 'All comparables imported successfully.';
+        setTimeout(() => { compScrapeProgress.style.display = 'none'; }, 3000);
+      }
       if (onComplete) onComplete();
       return;
     }
@@ -972,6 +981,10 @@ function setupEventListeners() {
     const stepAutoComps = document.getElementById('step-auto-comps');
     if (stepAutoComps) {
       stepAutoComps.innerHTML = `<span class="step-icon"></span> Fetching Comp ${index + 1}/${comps.length}: ${escapeHTML(comp.address)}...`;
+    }
+    if (compScrapeProgress) {
+      compScrapeProgress.style.display = 'block';
+      compScrapeProgress.innerHTML = `<div class="spinner" style="width: 12px; height: 12px; border-width: 2px; display: inline-block; vertical-align: middle; margin-right: 8px;"></div> Importing Comparable ${index + 1} of ${comps.length}...`;
     }
 
     try {
@@ -1002,19 +1015,23 @@ function setupEventListeners() {
         const match = searchData.properties[0]; // Take best match
         
         // Ensure it's not already in our local dataset to avoid redundant scrapes
-        // (Though scraping it ensures we have the latest tax info)
         const isAlreadyScraped = data.properties.some(p => p.pin === match.pin);
         
         if (!isAlreadyScraped) {
-          // Step 2: Hit stream API, but using fetch instead of EventSource since we just want it to finish
-          // Actually, we can use EventSource to await the 'complete' event, or just fetch the stream and read it
-          await new Promise((resolve) => {
-            const compEventSource = new EventSource(`/api/scrape/stream?pin=${match.pin}&address=${encodeURIComponent(match.address)}&owner=${encodeURIComponent(match.owner)}`);
-            compEventSource.onmessage = (event) => {
-              const payload = JSON.parse(event.data);
-              if (payload.complete || payload.error) {
-                compEventSource.close();
-                if (payload.property) {
+          // Step 2: Hit stream API using standard fetch and wait for it to finish
+          const streamUrl = `/api/scrape/stream?pin=${match.pin}&address=${encodeURIComponent(match.address)}&owner=${encodeURIComponent(match.owner)}`;
+          const scrapeRes = await fetch(streamUrl);
+          
+          // Read the SSE response to completion so the server doesn't throw a broken pipe
+          const text = await scrapeRes.text();
+          
+          // Try to extract the final complete payload to update our UI
+          try {
+            const lines = text.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const payload = JSON.parse(line.substring(6));
+                if (payload.complete && payload.property) {
                   data.properties.push(payload.property);
                   data.totalProperties = data.properties.length;
                   const trendPropCount = document.getElementById('trendPropertyCount');
@@ -1023,14 +1040,11 @@ function setupEventListeners() {
                   renderTrendChart();
                   renderDistributionChart();
                 }
-                resolve();
               }
-            };
-            compEventSource.onerror = () => {
-              compEventSource.close();
-              resolve();
-            };
-          });
+            }
+          } catch (e) {
+            console.warn('Failed to parse comp scrape result:', e);
+          }
         }
       }
     } catch (err) {
