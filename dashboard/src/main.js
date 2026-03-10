@@ -976,8 +976,27 @@ function setupEventListeners() {
 
     try {
       // Step 1: Search to get PIN
-      const searchRes = await fetch(`/api/scrape/search?address=${encodeURIComponent(comp.address)}`);
-      const searchData = await searchRes.json();
+      let searchAddress = comp.address;
+      let searchRes = await fetch(`/api/scrape/search?address=${encodeURIComponent(searchAddress)}`);
+      let searchData = await searchRes.json();
+
+      // Fallback: The county PDF often appends the city name to the address, which breaks their own search
+      if ((!searchData.properties || searchData.properties.length === 0) && searchAddress.includes(' ')) {
+        const parts = searchAddress.trim().split(' ');
+        parts.pop(); // Remove last word (e.g. MULVANE)
+        searchAddress = parts.join(' ');
+        searchRes = await fetch(`/api/scrape/search?address=${encodeURIComponent(searchAddress)}`);
+        searchData = await searchRes.json();
+      }
+
+      // Fallback 2: Handle two-word cities (e.g. VALLEY CENTER)
+      if ((!searchData.properties || searchData.properties.length === 0) && searchAddress.includes(' ')) {
+        const parts = searchAddress.trim().split(' ');
+        parts.pop(); 
+        searchAddress = parts.join(' ');
+        searchRes = await fetch(`/api/scrape/search?address=${encodeURIComponent(searchAddress)}`);
+        searchData = await searchRes.json();
+      }
 
       if (!searchData.error && searchData.properties && searchData.properties.length > 0) {
         const match = searchData.properties[0]; // Take best match
