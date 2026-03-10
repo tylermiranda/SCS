@@ -10,6 +10,7 @@ let detailBreakdownChart = null;
 let trendChartInstance = null;
 let distChartInstance = null;
 let mapInstance = null;
+let detailMapInstance = null;
 
 // ---- Utilities ----
 
@@ -318,6 +319,118 @@ function renderDistributionChart() {
       },
     },
   });
+}
+
+function renderNeighborhoodMap(targetProperty) {
+  const mapSection = document.getElementById('neighborhoodMapSection');
+  const mapContainer = document.getElementById('neighborhoodMap');
+  
+  if (!mapSection || !mapContainer || !targetProperty || !targetProperty.coordinates) {
+    if (mapSection) mapSection.style.display = 'none';
+    return;
+  }
+
+  mapSection.style.display = 'block';
+
+  // Initialize map if it doesn't exist
+  if (!detailMapInstance) {
+    detailMapInstance = L.map('neighborhoodMap');
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }).addTo(detailMapInstance);
+  }
+
+  // Clear existing markers
+  detailMapInstance.eachLayer((layer) => {
+    if (layer instanceof L.CircleMarker) {
+      detailMapInstance.removeLayer(layer);
+    }
+  });
+
+  // Calculate distance between two coordinates in km
+  function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+      Math.sin(dLon / 2) * Math.sin(dLon / 2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+    return R * c; 
+  }
+
+  // Find nearby properties (e.g. within 2km)
+  const nearbyProperties = data.properties.filter(p => {
+    if (!p.coordinates || !p.coordinates.lat) return false;
+    const dist = getDistanceFromLatLonInKm(targetProperty.coordinates.lat, targetProperty.coordinates.lng, p.coordinates.lat, p.coordinates.lng);
+    return dist <= 2;
+  });
+
+  const bounds = [];
+
+  // Plot nearby properties
+  nearbyProperties.forEach(p => {
+    const isTarget = p.pin === targetProperty.pin;
+    
+    let color = '#3b82f6'; // Blue for target property
+    let radius = isTarget ? 8 : 6;
+    let weight = isTarget ? 2 : 1;
+    let opacity = isTarget ? 1 : 0.8;
+    let zIndexOffset = isTarget ? 1000 : 0;
+
+    const latest = getLatestAppraisal(p, 2026);
+    const prev = getLatestAppraisal(p, 2025);
+    
+    let changePct = 0;
+    if (latest && prev && prev.total > 0) {
+      changePct = ((latest.total - prev.total) / prev.total) * 100;
+    } else if (latest) {
+      changePct = parseChangeNum(latest.change);
+    }
+
+    if (!isTarget) {
+      color = '#2e7d32'; // Green (Negative or 0)
+      if (changePct >= 20) color = '#d32f2f'; // Red (20%+)
+      else if (changePct >= 10) color = '#ff5500'; // Orange (10-19%)
+      else if (changePct > 0) color = '#facc15'; // Yellow (1-9%)
+    }
+
+    const marker = L.circleMarker([p.coordinates.lat, p.coordinates.lng], {
+      radius: radius,
+      fillColor: color,
+      color: isTarget ? '#fff' : '#111',
+      weight: weight,
+      opacity: 1,
+      fillOpacity: opacity
+    }).addTo(detailMapInstance);
+    
+    // Ensure target marker stays on top
+    if (isTarget && marker.bringToFront) {
+      marker.bringToFront();
+    }
+
+    const popupContent = `
+      <div style="font-family: var(--font-sans); color: #111;">
+        <strong style="display:block; margin-bottom: 4px;">${escapeHTML(cleanAddress(p.address))}</strong>
+        <div style="font-size: 0.85rem; margin-bottom: 2px;">Value (2026): ${latest ? formatCurrency(latest.total) : '—'}</div>
+        <div style="font-size: 0.85rem; font-weight: bold; color: ${isTarget ? '#111' : color};">Change: +${changePct.toFixed(1)}%</div>
+      </div>
+    `;
+    
+    marker.bindPopup(popupContent);
+    bounds.push([p.coordinates.lat, p.coordinates.lng]);
+  });
+
+  // Small delay to ensure the container is visible before invalidating size
+  setTimeout(() => {
+    detailMapInstance.invalidateSize();
+    
+    // Set view specifically on the target property
+    detailMapInstance.setView([targetProperty.coordinates.lat, targetProperty.coordinates.lng], 16);
+  }, 100);
 }
 
 function renderMap() {
@@ -779,6 +892,8 @@ function renderPropertyDetails(pin) {
     document.body.classList.add('has-active-property');
     inlineDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  renderNeighborhoodMap(property);
 }
 
 function clearActiveProperty() {
