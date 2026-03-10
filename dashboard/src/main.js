@@ -10,6 +10,7 @@ let detailBreakdownChart = null;
 let trendChartInstance = null;
 let distChartInstance = null;
 let mapInstance = null;
+let detailMapInstance = null;
 
 // ---- Utilities ----
 
