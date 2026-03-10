@@ -86,7 +86,7 @@ export async function onRequest(context) {
       // Fallback to OpenStreetMap if Census fails
       if (!coordinates) {
         try {
-          // Strip city name if present (e.g. MULVANE) for better OSM match
+          // Strip city name from the main address string but keep it for the query
           const parts = address.split(' ');
           let searchAddress = address;
           let city = '';
@@ -95,27 +95,31 @@ export async function onRequest(context) {
             searchAddress = parts.slice(0, -1).join(' ');
           }
 
-          let osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress + ', KS')}`;
+          const citySuffix = city ? `, ${city}, Sedgwick County, KS` : `, Sedgwick County, KS`;
+          let osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress + citySuffix)}`;
           let osmRes = await fetch(osmUrl, {
             headers: { 'User-Agent': 'SedgwickCountyTaxScraper/1.0' }
           });
           
           let osmData = [];
           if (osmRes.ok) {
-            osmData = await osmRes.json();
+            const rawData = await osmRes.json();
+            // Force filter to Kansas to prevent OSM returning weird matches from other states
+            osmData = rawData.filter(d => d.display_name && d.display_name.includes('Kansas'));
           }
 
           // Secondary Fallback: Strip house number and search just the street and city
           if ((!osmData || osmData.length === 0) && parts.length > 2) {
             // Remove the first part (the house number)
-            const streetOnlyParts = address.split(' ').slice(1);
+            const streetOnlyParts = searchAddress.split(' ').slice(1);
             const streetOnly = streetOnlyParts.join(' ');
-            osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(streetOnly + ', KS')}`;
+            osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(streetOnly + citySuffix)}`;
             osmRes = await fetch(osmUrl, {
               headers: { 'User-Agent': 'SedgwickCountyTaxScraper/1.0' }
             });
             if (osmRes.ok) {
-              osmData = await osmRes.json();
+              const rawData = await osmRes.json();
+              osmData = rawData.filter(d => d.display_name && d.display_name.includes('Kansas'));
             }
           }
 
