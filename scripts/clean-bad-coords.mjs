@@ -4,7 +4,9 @@ const API_URL = process.argv[2] || 'http://localhost:8788';
 
 async function run() {
   console.log(`Fetching properties from ${API_URL}/api/admin/data...`);
-  const res = await fetch(`${API_URL}/api/admin/data`);
+  const res = await fetch(`${API_URL}/api/admin/data`, {
+    headers: { 'Referer': API_URL + '/' }
+  });
   if (!res.ok) throw new Error('Failed to fetch from API');
   const data = await res.json();
   const properties = data.properties || [];
@@ -27,7 +29,10 @@ async function run() {
         
         const putRes = await fetch(`${API_URL}/api/admin/data`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Referer': API_URL + '/' 
+          },
           body: JSON.stringify({ property: p })
         });
         
