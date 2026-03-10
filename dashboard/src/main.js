@@ -1106,7 +1106,7 @@ function setupEventListeners() {
     resetProgressSteps();
     markStepActive('step-disclaimer');
 
-    const eventSource = new EventSource(`/api/scrape/stream?pin=${pin}&address=${encodeURIComponent(address)}&owner=${encodeURIComponent(owner)}`);
+    const eventSource = new EventSource(`/api/scrape/stream?pin=${pin}&address=${encodeURIComponent(address)}&owner=${encodeURIComponent(owner)}&t=${Date.now()}`);
 
     eventSource.onmessage = (event) => {
       const payload = JSON.parse(event.data);
@@ -1257,7 +1257,7 @@ function setupEventListeners() {
         
         if (!isAlreadyScraped) {
           // Step 2: Hit stream API using standard fetch and wait for it to finish
-          const streamUrl = `/api/scrape/stream?pin=${match.pin}&address=${encodeURIComponent(match.address)}&owner=${encodeURIComponent(match.owner)}`;
+          const streamUrl = `/api/scrape/stream?pin=${match.pin}&address=${encodeURIComponent(match.address)}&owner=${encodeURIComponent(match.owner)}&t=${Date.now()}`;
           const scrapeRes = await fetch(streamUrl);
           
           // Read the SSE response to completion so the server doesn't throw a broken pipe
