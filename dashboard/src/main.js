@@ -325,8 +325,38 @@ function renderNeighborhoodMap(targetProperty) {
   const mapSection = document.getElementById('neighborhoodMapSection');
   const mapContainer = document.getElementById('neighborhoodMap');
   
-  if (!mapSection || !mapContainer || !targetProperty || !targetProperty.coordinates) {
+  if (!mapSection || !mapContainer || !targetProperty) {
     if (mapSection) mapSection.style.display = 'none';
+    return;
+  }
+
+  let centerCoords = targetProperty.coordinates;
+
+  // Fallback 1: Use a comparable property's coordinates
+  if (!centerCoords && targetProperty.comparableSales && targetProperty.comparableSales.comps) {
+    for (const comp of targetProperty.comparableSales.comps) {
+      const fullComp = data.properties.find(p => p.address === comp.address);
+      if (fullComp && fullComp.coordinates && fullComp.coordinates.lat) {
+        centerCoords = fullComp.coordinates;
+        break;
+      }
+    }
+  }
+
+  // Fallback 2: Use any property in the same city
+  if (!centerCoords) {
+    const parts = targetProperty.address.trim().split(' ');
+    if (parts.length > 0) {
+      const city = parts[parts.length - 1]; // e.g. MULVANE
+      const cityProp = data.properties.find(p => p.address.endsWith(city) && p.coordinates && p.coordinates.lat);
+      if (cityProp) {
+        centerCoords = cityProp.coordinates;
+      }
+    }
+  }
+
+  if (!centerCoords || !centerCoords.lat) {
+    mapSection.style.display = 'none';
     return;
   }
 
@@ -365,7 +395,7 @@ function renderNeighborhoodMap(targetProperty) {
   // Find nearby properties (e.g. within 2km)
   const nearbyProperties = data.properties.filter(p => {
     if (!p.coordinates || !p.coordinates.lat) return false;
-    const dist = getDistanceFromLatLonInKm(targetProperty.coordinates.lat, targetProperty.coordinates.lng, p.coordinates.lat, p.coordinates.lng);
+    const dist = getDistanceFromLatLonInKm(centerCoords.lat, centerCoords.lng, p.coordinates.lat, p.coordinates.lng);
     return dist <= 2;
   });
 
@@ -429,7 +459,7 @@ function renderNeighborhoodMap(targetProperty) {
     detailMapInstance.invalidateSize();
     
     // Set view specifically on the target property
-    detailMapInstance.setView([targetProperty.coordinates.lat, targetProperty.coordinates.lng], 16);
+    detailMapInstance.setView([centerCoords.lat, centerCoords.lng], 16);
   }, 100);
 }
 
