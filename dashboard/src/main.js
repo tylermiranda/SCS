@@ -399,6 +399,13 @@ function renderNeighborhoodMap(targetProperty) {
     return dist <= 2;
   });
 
+  // Sort so the target property is rendered last (on top of others)
+  nearbyProperties.sort((a, b) => {
+    if (a.pin === targetProperty.pin) return 1;
+    if (b.pin === targetProperty.pin) return -1;
+    return 0;
+  });
+
   const bounds = [];
 
   // Plot nearby properties
@@ -409,7 +416,6 @@ function renderNeighborhoodMap(targetProperty) {
     let radius = isTarget ? 8 : 6;
     let weight = isTarget ? 2 : 1;
     let opacity = isTarget ? 1 : 0.8;
-    let zIndexOffset = isTarget ? 1000 : 0;
 
     const latest = getLatestAppraisal(p, 2026);
     const prev = getLatestAppraisal(p, 2025);
@@ -436,11 +442,6 @@ function renderNeighborhoodMap(targetProperty) {
       opacity: 1,
       fillOpacity: opacity
     }).addTo(detailMapInstance);
-    
-    // Ensure target marker stays on top
-    if (isTarget && marker.bringToFront) {
-      marker.bringToFront();
-    }
 
     const popupContent = `
       <div style="font-family: var(--font-sans); color: #111;">
@@ -1155,6 +1156,7 @@ function setupEventListeners() {
           try {
             renderPropertyDetails(payload.property.pin);
           } catch (error) {
+            console.error(error);
             alert("Error rendering property details: " + error.message);
           }
         }
