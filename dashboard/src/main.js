@@ -977,16 +977,15 @@ function setupEventListeners() {
   const closeNotificationBtn = document.getElementById('closeNotificationBtn');
   
   if (updateNotification && closeNotificationBtn) {
-    if (localStorage.getItem('hideUpdateInteractiveMap') === 'true') {
+    if (localStorage.getItem('hideUpdateNeighborhoodMap') === 'true') {
       updateNotification.style.display = 'none';
     }
-    
+
     closeNotificationBtn.addEventListener('click', () => {
       updateNotification.style.display = 'none';
-      localStorage.setItem('hideUpdateInteractiveMap', 'true');
+      localStorage.setItem('hideUpdateNeighborhoodMap', 'true');
     });
   }
-
   // Ad-hoc scrape (only on homepage)
   const adHocBtn = document.getElementById('adHocBtn');
   const adHocAddress = document.getElementById('adHocAddress');
