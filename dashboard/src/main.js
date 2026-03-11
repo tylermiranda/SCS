@@ -264,7 +264,8 @@ function renderDistributionChart() {
     const val = parseChangeNum(k);
     if (val >= 20) return '#d32f2f'; // Dark red for big increases
     if (val >= 10) return '#ff5500'; // Squeeze Orange
-    return '#2e7d32'; // Forest green
+    if (val >= 0) return '#facc15'; // Yellow for 0-9% increases
+    return '#2e7d32'; // Forest green for negative changes
   });
 
   if (distChartInstance) distChartInstance.destroy();
