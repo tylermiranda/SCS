@@ -43,20 +43,31 @@ async function backfill() {
         const geoData = await geoRes.json();
         if (geoData.result && geoData.result.addressMatches && geoData.result.addressMatches.length > 0) {
           const coords = geoData.result.addressMatches[0].coordinates;
-          p.coordinates = { lat: coords.y, lng: coords.x };
+          const lat = coords.y;
+          const lng = coords.x;
           
-          // Save back to DB
-          const saveRes = await fetch(`${API_URL}/api/admin/data`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ property: p })
-          });
+          // Sedgwick County bounding box check
+          const inSedgwick = lat > 37.4 && lat < 38.0 && lng > -97.9 && lng < -97.1;
           
-          if (saveRes.ok) {
-            console.log(`  -> Success! [${coords.y}, ${coords.x}]`);
-            successCount++;
+          if (inSedgwick) {
+            p.coordinates = { lat, lng };
+            
+            // Save back to DB
+            const saveRes = await fetch(`${API_URL}/api/admin/data`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ property: p })
+            });
+            
+            if (saveRes.ok) {
+              console.log(`  -> Success! [${lat}, ${lng}]`);
+              successCount++;
+            } else {
+              console.error(`  -> Failed to save to DB: ${saveRes.statusText}`);
+              failCount++;
+            }
           } else {
-            console.error(`  -> Failed to save to DB: ${saveRes.statusText}`);
+            console.log(`  -> Geocoded outside Sedgwick County [${lat}, ${lng}]. Ignoring.`);
             failCount++;
           }
         } else {

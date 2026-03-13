@@ -84,23 +84,32 @@ async function run() {
     
     if (status === 'Match' || status === 'Tie') {
       if (coordsStr) {
-        const [lng, lat] = coordsStr.split(',');
+        const [lngStr, latStr] = coordsStr.split(',');
+        const lat = parseFloat(latStr);
+        const lng = parseFloat(lngStr);
         
-        // Find property and update
-        const prop = properties.find(p => p.pin === pin);
-        if (prop) {
-          prop.coordinates = { lat: parseFloat(lat), lng: parseFloat(lng) };
-          const putRes = await fetch(`${API_URL}/api/admin/data`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ property: prop })
-          });
-          
-          if (putRes.ok) {
-            success++;
-          } else {
-            console.error(`Failed to update PIN ${pin} in local DB`);
+        // Sedgwick County bounding box check
+        const inSedgwick = lat > 37.4 && lat < 38.0 && lng > -97.9 && lng < -97.1;
+        
+        if (inSedgwick) {
+          // Find property and update
+          const prop = properties.find(p => p.pin === pin);
+          if (prop) {
+            prop.coordinates = { lat, lng };
+            const putRes = await fetch(`${API_URL}/api/admin/data`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ property: prop })
+            });
+            
+            if (putRes.ok) {
+              success++;
+            } else {
+              console.error(`Failed to update PIN ${pin} in local DB`);
+            }
           }
+        } else {
+          console.warn(`PIN ${pin} geocoded outside Sedgwick County (${lat}, ${lng}). Ignoring.`);
         }
       }
     }
