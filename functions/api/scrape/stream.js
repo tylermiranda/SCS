@@ -75,7 +75,13 @@ export async function onRequest(context) {
             const geoData = await geoRes.json();
             if (geoData.result && geoData.result.addressMatches && geoData.result.addressMatches.length > 0) {
               const coords = geoData.result.addressMatches[0].coordinates;
-              coordinates = { lat: coords.y, lng: coords.x };
+              const lat = coords.y;
+              const lng = coords.x;
+              if (lat > 37.4 && lat < 38.0 && lng > -97.9 && lng < -97.1) {
+                coordinates = { lat, lng };
+              } else {
+                console.warn(`Census API returned coordinates outside Sedgwick County: ${lat}, ${lng}`);
+              }
             }
           }
         } catch (e) {
@@ -124,7 +130,13 @@ export async function onRequest(context) {
           }
 
           if (osmData && osmData.length > 0) {
-            coordinates = { lat: parseFloat(osmData[0].lat), lng: parseFloat(osmData[0].lon) };
+            const lat = parseFloat(osmData[0].lat);
+            const lng = parseFloat(osmData[0].lon);
+            if (lat > 37.4 && lat < 38.0 && lng > -97.9 && lng < -97.1) {
+              coordinates = { lat, lng };
+            } else {
+              console.warn(`OSM API returned coordinates outside Sedgwick County: ${lat}, ${lng}`);
+            }
           }
         } catch (e) {
           console.warn('OSM Geocoding fallback failed for', address, e);
