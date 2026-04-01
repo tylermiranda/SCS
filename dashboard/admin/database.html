@@ -217,15 +217,22 @@
                   const geoData = await geoRes.json();
                   if (geoData.result && geoData.result.addressMatches && geoData.result.addressMatches.length > 0) {
                     const coords = geoData.result.addressMatches[0].coordinates;
-                    p.coordinates = { lat: coords.y, lng: coords.x };
+                    const lat = coords.y;
+                    const lng = coords.x;
                     
-                    // Save back to DB
-                    await fetch('/api/admin/data', {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ property: p })
-                    });
-                    successCount++;
+                    if (lat > 37.4 && lat < 38.0 && lng > -97.9 && lng < -97.1) {
+                      p.coordinates = { lat, lng };
+                      
+                      // Save back to DB
+                      await fetch('/api/admin/data', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ property: p })
+                      });
+                      successCount++;
+                    } else {
+                      failCount++;
+                    }
                   } else {
                     failCount++;
                   }

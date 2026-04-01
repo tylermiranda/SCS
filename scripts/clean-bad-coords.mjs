@@ -18,13 +18,12 @@ async function run() {
       const lat = p.coordinates.lat;
       const lng = p.coordinates.lng;
       
-      // Kansas is roughly Lat: 37 to 40, Lng: -102 to -94
-      // Sedgwick County is specifically Lat: ~37.5 to 37.9, Lng: ~-97.8 to -97.2
-      // Let's use a generous Kansas bounding box
-      const inKansas = lat > 36.5 && lat < 40.5 && lng > -103.0 && lng < -94.0;
+      // Sedgwick County is specifically Lat: ~37.4 to 38.0, Lng: ~-97.9 to -97.1
+      // We only want properties in Sedgwick County
+      const inSedgwick = lat > 37.4 && lat < 38.0 && lng > -97.9 && lng < -97.1;
       
-      if (!inKansas) {
-        console.log(`[${p.pin}] ${p.address} is outside KS (${lat}, ${lng}). Deleting coordinates...`);
+      if (!inSedgwick) {
+        console.log(`[${p.pin}] ${p.address} is outside Sedgwick County (${lat}, ${lng}). Deleting coordinates...`);
         delete p.coordinates;
         
         const putRes = await fetch(`${API_URL}/api/admin/data`, {
